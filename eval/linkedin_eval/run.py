@@ -78,7 +78,16 @@ def main(argv: list[str]) -> None:
         "--jobs-dir", str(JOBS_DIR), *rest,
     ]
     print("▸ " + " ".join(command), file=sys.stderr)
-    code = subprocess.run(command).returncode
+    if path:
+        code = subprocess.run(command).returncode
+    else:
+        # A dataset the Hub does not show to this container fails deep in Harbor with a traceback; say why instead.
+        result = subprocess.run(command, stderr=subprocess.PIPE, text=True)
+        code = result.returncode
+        if code and ("not found for dataset" in result.stderr or "Dataset" in result.stderr and "not found" in result.stderr):
+            fail(f"{dataset[1]} is not on Harbor Hub, or not public: this container has no Hub login. "
+                 "Run a local build instead: docker compose run --rm -v <dataset folder>:/dataset:ro eval -p /dataset")
+        sys.stderr.write(result.stderr)
     print(f"\nResults are in the {JOBS_VOLUME} volume; `docker compose run --rm eval-results` lists them.", file=sys.stderr)
     sys.exit(code)
 
