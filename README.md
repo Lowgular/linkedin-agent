@@ -51,17 +51,22 @@ Desktop needs WSL 2. `docker compose logs world` shows the world's three service
 
 ## Trace it in Google Cloud
 
-With a project in `.env` (`GOOGLE_CLOUD_PROJECT=`), the agent container exports every session to
-that project: the prompt, each model request and each tool call as events in Cloud Logging (log
-`gemini_cli`), the same as spans in Cloud Trace, token counts in Cloud Monitoring. It authenticates
-with your Application Default Credentials, mounted read-only from gcloud's folder:
+With a project in `.env` (`GOOGLE_CLOUD_PROJECT=`) and `COMPOSE_PROFILES=trace`, compose starts an
+OpenTelemetry collector beside the world (`telemetry/collector.yaml`). The agent sends its telemetry
+there and the collector ships it to that project: each turn as a trace in Cloud Trace (the tool
+calls as spans under it), the events in Cloud Logging (log `gemini_cli`, each entry linked to its
+trace), token and tool counts in Cloud Monitoring. It authenticates with your Application Default
+Credentials, mounted read-only from gcloud's folder:
 
 ```sh
 gcloud auth application-default login
 gcloud services enable cloudtrace.googleapis.com logging.googleapis.com monitoring.googleapis.com --project <project>
 ```
 
-Without a project in `.env` nothing leaves the machine.
+Then Trace Explorer, `https://console.cloud.google.com/traces/explorer?project=<project>`, filtered on
+the span attribute `gen_ai.conversation.id`, the session's id, shows one run. Without a project and
+the profile nothing leaves the machine. The CLI's own direct export to Google Cloud wrote the logs
+but never the spans, hence the collector.
 
 ## Run it with a CLI on this machine
 

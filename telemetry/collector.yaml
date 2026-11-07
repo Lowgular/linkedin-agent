@@ -1,0 +1,38 @@
+# telemetry/collector.yaml — the OpenTelemetry collector compose runs with the `trace` profile: it takes the
+# agent's telemetry over OTLP on 127.0.0.1:4317 (inside the world's network) and ships it to Google Cloud —
+# spans to Cloud Trace, events to Cloud Logging (log `gemini_cli`), counters to Cloud Monitoring — in the
+# project GOOGLE_CLOUD_PROJECT names, with the host's Application Default Credentials. The CLI's own direct
+# export writes logs but its spans never showed up in Cloud Trace; through a collector they do.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 127.0.0.1:4317
+processors:
+  batch:
+    send_batch_size: 200
+    timeout: 2s
+exporters:
+  googlecloud:
+    project: ${env:GOOGLE_CLOUD_PROJECT}
+    log:
+      default_log_name: gemini_cli
+  debug:
+    verbosity: basic
+service:
+  telemetry:
+    logs:
+      level: info
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [googlecloud, debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [googlecloud]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [googlecloud]

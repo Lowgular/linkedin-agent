@@ -31,24 +31,40 @@ services:
       - path: .env
         required: false
     environment:
-      # Tracing to Google Cloud, on when .env names a project: every model request and tool call as a span
-      # in Cloud Trace, the events in Cloud Logging, token counts in Cloud Monitoring. The CLI exports in
-      # process with Application Default Credentials, mounted read-only from the host's gcloud folder
-      # (`gcloud auth application-default login` once); the project needs the Trace, Logging and Monitoring
-      # APIs on. Without a project in .env nothing is exported and the mount is an empty folder.
+      # Tracing to Google Cloud, on when .env names a project (and COMPOSE_PROFILES=trace starts the collector):
+      # the CLI sends its telemetry over OTLP to the collector service, which ships every model request and
+      # tool call as a span to Cloud Trace, the events to Cloud Logging, token counts to Cloud Monitoring.
+      # Without a project in .env the CLI emits nothing.
       GEMINI_TELEMETRY_ENABLED: ${GOOGLE_CLOUD_PROJECT:+true}
       GEMINI_TELEMETRY_TRACES_ENABLED: ${GOOGLE_CLOUD_PROJECT:+true}
       GEMINI_TELEMETRY_TARGET: gcp
+      GEMINI_TELEMETRY_USE_COLLECTOR: "true"
+      GEMINI_TELEMETRY_OTLP_ENDPOINT: http://127.0.0.1:4317
+      GEMINI_TELEMETRY_OTLP_PROTOCOL: grpc
       GEMINI_TELEMETRY_LOG_PROMPTS: ${GEMINI_TELEMETRY_LOG_PROMPTS:-true}
       GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
-      OTLP_GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
-      GOOGLE_APPLICATION_CREDENTIALS: /root/.config/gcloud/application_default_credentials.json
     volumes:
       - .:/app
       - gemini-home:/root/.gemini
-      - ${GCLOUD_CONFIG_DIR:-$HOME/.config/gcloud}:/root/.config/gcloud:ro
     working_dir: /app
     stdin_open: true
     tty: true
+  collector:
+    # Only with the `trace` profile (COMPOSE_PROFILES=trace in .env): ships the agent's telemetry to the
+    # project GOOGLE_CLOUD_PROJECT names, with the Application Default Credentials from gcloud's folder on
+    # this machine (`gcloud auth application-default login`), mounted read-only.
+    image: otel/opentelemetry-collector-contrib:0.140.0
+    profiles: ["trace"]
+    network_mode: "service:world"
+    depends_on:
+      - world
+    command: ["--config=/etc/otelcol/collector.yaml"]
+    user: "0:0"
+    environment:
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
+      GOOGLE_APPLICATION_CREDENTIALS: /gcloud/application_default_credentials.json
+    volumes:
+      - ./telemetry/collector.yaml:/etc/otelcol/collector.yaml:ro
+      - ${GCLOUD_CONFIG_DIR:-$HOME/.config/gcloud}:/gcloud:ro
 volumes:
   gemini-home:
