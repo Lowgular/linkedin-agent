@@ -2,3 +2,4 @@
 .obsidian/
 .claude/settings.local.json
 .env
+compose.override.yaml

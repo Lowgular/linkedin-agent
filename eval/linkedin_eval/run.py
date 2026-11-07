@@ -75,6 +75,12 @@ def main(argv: list[str]) -> None:
         os.environ["EXTRACTOR"] = extractor  # Harbor hands it to each task, whose grader reads it
     check_jobs_volume()
     model = ALIASES.get(model, model)
+    # A local build of the dataset, when this machine has one mounted (compose.override.yaml, DATASET_DIR), wins
+    # over the Hub unless -v asks for a published version.
+    local = os.environ.get("DATASET_DIR", "")
+    if not path and not version and local and Path(local, "dataset.toml").is_file():
+        path = local
+        print(f"▸ the local dataset build at {local} (DATASET_DIR); -v <version> runs the Hub's", file=sys.stderr)
     dataset = ["-p", path] if path else ["-d", f"{DATASET}@{version}" if version else DATASET]
     if "-n" not in rest and "--n-concurrent" not in rest:
         rest += ["-n", "1"]
