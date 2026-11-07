@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "run": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{16}$",
+      "description": "Session ID from dev-browser session_start"
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "description": "How many posts at most; 10 when not given"
+    },
+    "tab": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{16}$",
+      "description": "Tab ID belonging to this run"
+    }
+  },
+  "required": [
+    "run",
+    "tab"
+  ]
+}

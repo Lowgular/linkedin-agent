@@ -1,0 +1,81 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "ends",
+    "evidence",
+    "schools",
+    "hasMore"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "failed"
+      ]
+    },
+    "ends": {
+      "type": "string",
+      "description": "The page the run is on after, by its id — or unknown"
+    },
+    "at": {
+      "type": "string",
+      "description": "Only when failed: the step the method stopped at"
+    },
+    "message": {
+      "type": "string",
+      "description": "What LinkedIn said, word for word: a notice, an error, an empty state"
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the page showed, in LinkedIn's terms"
+    },
+    "schools": {
+      "type": "array",
+      "description": "The schools, in the card's order",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "school",
+          "schoolUrl",
+          "degree",
+          "dates"
+        ],
+        "properties": {
+          "school": {
+            "type": "string"
+          },
+          "schoolUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The school's page, https://www.linkedin.com/school/<id>/, when the entry links to one"
+          },
+          "degree": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "As shown"
+          },
+          "dates": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "As shown, e.g. 2010 – 2015"
+          }
+        }
+      }
+    },
+    "hasMore": {
+      "type": "boolean",
+      "description": "Whether the card ends in a Show all educations link"
+    }
+  }
+}

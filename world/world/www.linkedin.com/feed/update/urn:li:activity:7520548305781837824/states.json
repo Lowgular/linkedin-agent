@@ -1,0 +1,115 @@
+{
+  "page": "www.linkedin.com/feed/update/urn:li:activity:7520548305781837824",
+  "initial": "922675374f23",
+  "states": {
+    "922675374f23": {
+      "title": "Post | LinkedIn",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7520548305781837824/",
+      "capturedAt": "2026-11-04T06:38:56.774Z"
+    },
+    "901f29b04d9d": {
+      "title": "Post | LinkedIn",
+      "via": {
+        "tag": "a",
+        "role": "link",
+        "name": "2 reactions"
+      },
+      "post": "7520548305781837824",
+      "synth": true
+    }
+  },
+  "transitions": [
+    {
+      "from": "922675374f23",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Weronika Sadowska reacted with Like",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]/div[1]/div[1]/a[1]",
+        "href": "https://www.linkedin.com/in/weronika-sadowska-2k7f1/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/weronika-sadowska-2k7f1"
+      },
+      "synth": true
+    },
+    {
+      "from": "922675374f23",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Igor Baranov reacted with Like",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]/div[1]/div[1]/a[2]",
+        "href": "https://www.linkedin.com/in/igor-baranov-8q3m2/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/igor-baranov-8q3m2"
+      },
+      "synth": true
+    },
+    {
+      "from": "922675374f23",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "2 reactions",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[6]/a[1]",
+        "href": "https://www.linkedin.com/feed/update/urn:li:activity:7520548305781837824/"
+      },
+      "to": "901f29b04d9d",
+      "synth": true
+    },
+    {
+      "from": "922675374f23",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Weronika Sadowska reacted with Like",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]",
+        "href": "https://www.linkedin.com/feed/update/urn:li:activity:7520548305781837824/"
+      },
+      "to": "901f29b04d9d",
+      "synth": true
+    },
+    {
+      "from": "901f29b04d9d",
+      "click": {
+        "tag": "button",
+        "role": "button",
+        "name": "Dismiss",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/button[1]",
+        "href": null
+      },
+      "to": "922675374f23",
+      "synth": true
+    },
+    {
+      "from": "901f29b04d9d",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Weronika Sadowska • 1st Head of Product at Lantern Analytics · ex-fintech · writes about pricing",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]",
+        "href": "https://www.linkedin.com/in/weronika-sadowska-2k7f1/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/weronika-sadowska-2k7f1"
+      },
+      "synth": true
+    },
+    {
+      "from": "901f29b04d9d",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Igor Baranov • 1st Staff Engineer, payments infrastructure · on-call since 2014",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/a[1]",
+        "href": "https://www.linkedin.com/in/igor-baranov-8q3m2/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/igor-baranov-8q3m2"
+      },
+      "synth": true
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "ends",
+    "evidence",
+    "invitations",
+    "total",
+    "more"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "failed"
+      ]
+    },
+    "ends": {
+      "type": "string",
+      "description": "The page the run is on after, by its id — or unknown"
+    },
+    "at": {
+      "type": "string",
+      "description": "Only when failed: the step the method stopped at"
+    },
+    "message": {
+      "type": "string",
+      "description": "What LinkedIn said, word for word: a notice, an error, an empty state"
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the page showed, in LinkedIn's terms"
+    },
+    "invitations": {
+      "type": "array",
+      "description": "The invitations, newest first",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "url",
+          "headline",
+          "sent",
+          "note"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "description": "The member's profile address, https://www.linkedin.com/in/<slug>/"
+          },
+          "headline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "As shown"
+          },
+          "sent": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "As shown: Sent today, Sent 2 minutes ago, Sent 4 days ago"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The note sent with it, as far as the page shows it; null when none"
+          }
+        }
+      }
+    },
+    "total": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "What the People tab counts: People (29) as 29"
+    },
+    "more": {
+      "type": "boolean",
+      "description": "Whether the page showed, or could load, more than returned"
+    }
+  }
+}

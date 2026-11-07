@@ -1,0 +1,105 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "ends",
+    "evidence",
+    "posts",
+    "more"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "failed"
+      ]
+    },
+    "ends": {
+      "type": "string",
+      "description": "The page the run is on after, by its id — or unknown"
+    },
+    "at": {
+      "type": "string",
+      "description": "Only when failed: the step the method stopped at"
+    },
+    "message": {
+      "type": "string",
+      "description": "What LinkedIn said, word for word: a notice, an error, an empty state"
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the page showed, in LinkedIn's terms"
+    },
+    "posts": {
+      "type": "array",
+      "description": "The posts the card shows, newest first",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "url",
+          "kind",
+          "author",
+          "when",
+          "text",
+          "hasMore",
+          "reactions",
+          "comments",
+          "reposts"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The post's address, https://www.linkedin.com/feed/update/urn:li:activity:<id>/"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "post",
+              "repost",
+              "comment"
+            ]
+          },
+          "author": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Whose post it is: the name after `Open control menu for post by`"
+          },
+          "when": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The age as shown, e.g. 6h, 1d • Edited"
+          },
+          "text": {
+            "type": "string",
+            "description": "The text, as far as the card shows it"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "description": "Whether the text is cut short: the card ends it in a … more button"
+          },
+          "reactions": {
+            "type": "integer"
+          },
+          "comments": {
+            "type": "integer"
+          },
+          "reposts": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "more": {
+      "type": "boolean",
+      "description": "Whether a Show all posts link leads to the activity page with more"
+    }
+  }
+}

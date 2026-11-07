@@ -1,0 +1,96 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "ends",
+    "evidence",
+    "total",
+    "reactors",
+    "complete"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "failed"
+      ]
+    },
+    "ends": {
+      "type": "string",
+      "description": "The page the run is on after, by its id — or unknown"
+    },
+    "at": {
+      "type": "string",
+      "description": "Only when failed: the step the method stopped at"
+    },
+    "message": {
+      "type": "string",
+      "description": "What LinkedIn said, word for word: a notice, an error, an empty state"
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the page showed, in LinkedIn's terms"
+    },
+    "total": {
+      "type": "integer",
+      "description": "What the dialog's All reactions button counts; the reactors' count when it shows none"
+    },
+    "reactors": {
+      "type": "array",
+      "description": "The reactors, in the dialog's order, each once",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "url",
+          "kind",
+          "reaction",
+          "degree",
+          "headline"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "description": "A member's profile, https://www.linkedin.com/in/<slug>/, or a company's page, https://www.linkedin.com/company/<slug>/ — the link's address without its query"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "member",
+              "company"
+            ]
+          },
+          "reaction": {
+            "type": "string",
+            "description": "Like, Celebrate, Support, Love, Insightful, Funny"
+          },
+          "degree": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "1st, 2nd, 3rd — null when the dialog shows none"
+          },
+          "headline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "As the dialog shows it"
+          }
+        }
+      }
+    },
+    "complete": {
+      "type": "boolean",
+      "description": "Whether the list was read to its end"
+    }
+  }
+}

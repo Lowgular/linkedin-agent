@@ -1,0 +1,17 @@
+{
+  "description": "Enforce the response contract: the final response of every turn must validate against response.schema.json. The command resolves relative to the session cwd, which must be this agent folder — the interactive README, the evals and the future MCP wrapper all start Codex there.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ./hooks/validate-response.mjs",
+            "timeout": 30,
+            "statusMessage": "Validating response contract"
+          }
+        ]
+      }
+    ]
+  }
+}

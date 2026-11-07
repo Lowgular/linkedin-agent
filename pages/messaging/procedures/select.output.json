@@ -1,0 +1,45 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "ends",
+    "evidence",
+    "name",
+    "url"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "failed"
+      ]
+    },
+    "ends": {
+      "type": "string",
+      "description": "The page the run is on after, by its id — or unknown"
+    },
+    "at": {
+      "type": "string",
+      "description": "Only when failed: the step the method stopped at"
+    },
+    "message": {
+      "type": "string",
+      "description": "What LinkedIn said, word for word: a notice, an error, an empty state"
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the page showed, in LinkedIn's terms"
+    },
+    "name": {
+      "type": "string",
+      "description": "The heading of the conversation open on the right"
+    },
+    "url": {
+      "type": "string",
+      "description": "The tab's address after: https://www.linkedin.com/messaging/thread/<id>/"
+    }
+  }
+}

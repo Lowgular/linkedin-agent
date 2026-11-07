@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "profileUrl": {
+      "type": "string",
+      "pattern": "^https://www\\.linkedin\\.com/in/[a-z0-9-]+/?$",
+      "description": "The member's profile address, https://www.linkedin.com/in/<slug>/"
+    }
+  },
+  "required": [
+    "profileUrl"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run",
+    "conversation",
+    "tab"
+  ],
+  "properties": {
+    "run": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{16}$",
+      "description": "Session ID from dev-browser session_start"
+    },
+    "conversation": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The member's or group's name exactly as the list shows it, or the address https://www.linkedin.com/messaging/thread/<id>/"
+    },
+    "tab": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{16}$",
+      "description": "Tab ID belonging to this run"
+    }
+  }
+}

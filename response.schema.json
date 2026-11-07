@@ -1,0 +1,45 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "reasoning",
+    "operations"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "failed"
+      ],
+      "description": "The run overall: ok when every requested operation reported ok"
+    },
+    "reasoning": {
+      "type": "string",
+      "description": "What was observed and why each result looks as it does, in the page's terms"
+    },
+    "operations": {
+      "type": "array",
+      "description": "The answers from operations actually performed. Each entry names the operation and contains its own JSON response serialized as a string; the caller parses and validates that value against the operation's Output schema.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "value"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The page and operation name (e.g. <page>.<operation>)"
+          },
+          "value": {
+            "type": "string",
+            "description": "The operation's JSON response, serialized as a string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "ends",
+    "evidence",
+    "connections",
+    "total",
+    "more"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "failed"
+      ]
+    },
+    "ends": {
+      "type": "string",
+      "description": "The page the run is on after, by its id — or unknown"
+    },
+    "at": {
+      "type": "string",
+      "description": "Only when failed: the step the method stopped at"
+    },
+    "message": {
+      "type": "string",
+      "description": "What LinkedIn said, word for word: a notice, an error, an empty state"
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the page showed, in LinkedIn's terms"
+    },
+    "connections": {
+      "type": "array",
+      "description": "The connections, newest first",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "url",
+          "headline",
+          "connectedOn"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "description": "The member's profile address, https://www.linkedin.com/in/<slug>/"
+          },
+          "headline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "As shown"
+          },
+          "connectedOn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "As shown after Connected on: October 22, 2026"
+          }
+        }
+      }
+    },
+    "total": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "What the heading counts: 2,695 connections as 2695"
+    },
+    "more": {
+      "type": "boolean",
+      "description": "Whether the page showed, or could load, more than returned"
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "why": "The loop the world is authored for: my profile, my posts, the people who reacted, their profiles. compose.mjs rewrites the scrubbed recording from this file; every surface a post is seen on shows the same reactors, and every reactor leads to the profile described here. A post's age (as LinkedIn shows it, 6d, 1w) and impressions are set from here too, so every page agrees: the pages were recorded days apart.",
+  "me": "your-profile",
+  "people": {
+    "weronika-sadowska-2k7f1": {
+      "name": "Weronika Sadowska",
+      "headline": "Head of Product at Lantern Analytics · ex-fintech · writes about pricing",
+      "location": "Kraków, Małopolskie, Poland",
+      "connections": "500+",
+      "about": "I run product at Lantern Analytics, a company of forty people that sells one thing well. Before that I spent six years in fintech, mostly on pricing and billing, which taught me that the hardest part of a product is the invoice. I write a short monthly note on pricing decisions and why they go wrong."
+    },
+    "igor-baranov-8q3m2": {
+      "name": "Igor Baranov",
+      "headline": "Staff Engineer, payments infrastructure · on-call since 2014",
+      "location": "Gdańsk, Pomorskie, Poland",
+      "connections": "312",
+      "about": "I keep payment systems boring. Ten years of ledgers, retries and reconciliation jobs, first at a bank and now at a marketplace. I like small services with clear owners and I distrust any diagram with more than seven boxes. Happy to talk about idempotency keys for longer than is reasonable."
+    },
+    "ines-ferreira-5d9x4": {
+      "name": "Inês Ferreira",
+      "headline": "Design Lead at Juniper Studio · design systems for regulated industries",
+      "location": "Berlin, Germany",
+      "connections": "1,048",
+      "about": "I lead a team of five designers at Juniper Studio. We build design systems for banks and insurers, where every component has to survive an audit. I care about naming, documentation and the moment a developer stops asking us questions because the system already answers them."
+    },
+    "teodor-lis-7w1c9": {
+      "name": "Teodor Lis",
+      "headline": "Founder at Beacon Cloud · hiring engineers in Warsaw",
+      "location": "Warsaw, Mazowieckie, Poland",
+      "connections": "500+",
+      "about": "Founder of Beacon Cloud, a hosting company for teams that do not want to run Kubernetes themselves. Twelve people, profitable, no investors. I post when we learn something expensive. We are hiring two backend engineers in Warsaw this quarter."
+    }
+  },
+  "posts": {
+    "7521249598284124160": {
+      "reactors": [
+        "weronika-sadowska-2k7f1",
+        "igor-baranov-8q3m2",
+        "ines-ferreira-5d9x4",
+        "teodor-lis-7w1c9"
+      ],
+      "age": "6d",
+      "impressions": "1,406"
+    },
+    "7521292970407440385": {
+      "reactors": [],
+      "age": "6d",
+      "impressions": "184"
+    },
+    "7520548305781837824": {
+      "reactors": [
+        "weronika-sadowska-2k7f1",
+        "igor-baranov-8q3m2"
+      ],
+      "age": "1w",
+      "impressions": "114"
+    },
+    "7518907410514857984": {
+      "reactors": [
+        "igor-baranov-8q3m2",
+        "ines-ferreira-5d9x4",
+        "teodor-lis-7w1c9"
+      ],
+      "age": "1w",
+      "impressions": "162"
+    },
+    "7518568948049715200": {
+      "reactors": [],
+      "age": "1w",
+      "impressions": "98"
+    },
+    "7517963441299496961": {
+      "reactors": [
+        "ines-ferreira-5d9x4"
+      ],
+      "age": "2w",
+      "impressions": "536"
+    },
+    "7516519700353171456": {
+      "reactors": [
+        "weronika-sadowska-2k7f1",
+        "ines-ferreira-5d9x4",
+        "teodor-lis-7w1c9"
+      ],
+      "age": "2w",
+      "impressions": "86"
+    }
+  },
+  "templates": {
+    "profile": "www.linkedin.com/in/clara-lewandowska-8e3e2",
+    "dialogs": {
+      "profile": "www.linkedin.com/in/clara-lewandowska-8e3e2",
+      "feed": "www.linkedin.com/in/your-profile/recent-activity/all"
+    }
+  }
+}

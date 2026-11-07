@@ -1,0 +1,183 @@
+{
+  "page": "www.linkedin.com/feed/update/urn:li:activity:7521249598284124160",
+  "initial": "bd433f37358a",
+  "states": {
+    "bd433f37358a": {
+      "title": "Post | LinkedIn",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7521249598284124160/",
+      "capturedAt": "2026-11-04T06:38:35.499Z"
+    },
+    "5858b471b957": {
+      "title": "Post | LinkedIn",
+      "via": {
+        "tag": "a",
+        "role": "link",
+        "name": "4 reactions"
+      },
+      "post": "7521249598284124160",
+      "synth": true
+    }
+  },
+  "transitions": [
+    {
+      "from": "bd433f37358a",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Weronika Sadowska reacted with Like",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]/div[1]/div[1]/a[1]",
+        "href": "https://www.linkedin.com/in/weronika-sadowska-2k7f1/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/weronika-sadowska-2k7f1"
+      },
+      "synth": true
+    },
+    {
+      "from": "bd433f37358a",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Igor Baranov reacted with Like",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]/div[1]/div[1]/a[2]",
+        "href": "https://www.linkedin.com/in/igor-baranov-8q3m2/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/igor-baranov-8q3m2"
+      },
+      "synth": true
+    },
+    {
+      "from": "bd433f37358a",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Inês Ferreira reacted with Like",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]/div[1]/div[1]/a[3]",
+        "href": "https://www.linkedin.com/in/ines-ferreira-5d9x4/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/ines-ferreira-5d9x4"
+      },
+      "synth": true
+    },
+    {
+      "from": "bd433f37358a",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Teodor Lis reacted with Like",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]/div[1]/div[1]/a[4]",
+        "href": "https://www.linkedin.com/in/teodor-lis-7w1c9/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/teodor-lis-7w1c9"
+      },
+      "synth": true
+    },
+    {
+      "from": "bd433f37358a",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "4 reactions",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[5]/a[3]",
+        "href": "https://www.linkedin.com/feed/update/urn:li:activity:7521249598284124160/"
+      },
+      "to": "5858b471b957",
+      "synth": true
+    },
+    {
+      "from": "bd433f37358a",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Weronika Sadowska reacted with Like",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]",
+        "href": "https://www.linkedin.com/feed/update/urn:li:activity:7521249598284124160/"
+      },
+      "to": "5858b471b957",
+      "synth": true
+    },
+    {
+      "from": "bd433f37358a",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "View all reactions",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]/div[1]/div[1]/a[5]",
+        "href": "https://www.linkedin.com/feed/update/urn:li:activity:7521249598284124160/"
+      },
+      "to": "5858b471b957",
+      "synth": true
+    },
+    {
+      "from": "5858b471b957",
+      "click": {
+        "tag": "button",
+        "role": "button",
+        "name": "Dismiss",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/button[1]",
+        "href": null
+      },
+      "to": "bd433f37358a",
+      "synth": true
+    },
+    {
+      "from": "5858b471b957",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Weronika Sadowska • 1st Head of Product at Lantern Analytics · ex-fintech · writes about pricing",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]",
+        "href": "https://www.linkedin.com/in/weronika-sadowska-2k7f1/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/weronika-sadowska-2k7f1"
+      },
+      "synth": true
+    },
+    {
+      "from": "5858b471b957",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Igor Baranov • 1st Staff Engineer, payments infrastructure · on-call since 2014",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/a[1]",
+        "href": "https://www.linkedin.com/in/igor-baranov-8q3m2/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/igor-baranov-8q3m2"
+      },
+      "synth": true
+    },
+    {
+      "from": "5858b471b957",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Inês Ferreira • 1st Design Lead at Juniper Studio · design systems for regulated industries",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/a[1]",
+        "href": "https://www.linkedin.com/in/ines-ferreira-5d9x4/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/ines-ferreira-5d9x4"
+      },
+      "synth": true
+    },
+    {
+      "from": "5858b471b957",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Teodor Lis • 1st Founder at Beacon Cloud · hiring engineers in Warsaw",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[4]/a[1]",
+        "href": "https://www.linkedin.com/in/teodor-lis-7w1c9/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/teodor-lis-7w1c9"
+      },
+      "synth": true
+    }
+  ]
+}

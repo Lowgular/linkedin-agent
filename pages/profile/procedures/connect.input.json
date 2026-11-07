@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "run": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{16}$",
+      "description": "Session ID from dev-browser session_start"
+    },
+    "note": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300,
+      "description": "The note to send with the invitation, exactly; none sends without a note"
+    },
+    "tab": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{16}$",
+      "description": "Tab ID belonging to this run"
+    }
+  },
+  "required": [
+    "run",
+    "tab"
+  ]
+}

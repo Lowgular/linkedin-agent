@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "project": "linkedin-po",
+  "redact": true,
+  "replicas": [],
+  "metadata": { "agent": "linkedin-po", "harness": "codex" }
+}

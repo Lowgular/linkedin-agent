@@ -1,0 +1,94 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "ends",
+    "evidence",
+    "author",
+    "authorUrl",
+    "group",
+    "when",
+    "edited",
+    "text",
+    "media",
+    "reactions",
+    "comments",
+    "reposts"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "failed"
+      ]
+    },
+    "ends": {
+      "type": "string",
+      "description": "The page the run is on after, by its id — or unknown"
+    },
+    "at": {
+      "type": "string",
+      "description": "Only when failed: the step the method stopped at"
+    },
+    "message": {
+      "type": "string",
+      "description": "What LinkedIn said, word for word: a notice, an error, an empty state"
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the page showed, in LinkedIn's terms"
+    },
+    "author": {
+      "type": "string",
+      "description": "Whose post it is: the name in the card's header, or after `Open control menu for post by`"
+    },
+    "authorUrl": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The author's profile address, https://www.linkedin.com/in/<slug>/, when the header links to it"
+    },
+    "group": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The group the post was made in, when the header names one (`View group: …`)"
+    },
+    "when": {
+      "type": "string",
+      "description": "The age as shown, e.g. 6h, 1d"
+    },
+    "edited": {
+      "type": "boolean",
+      "description": "Whether the age says Edited"
+    },
+    "text": {
+      "type": "string",
+      "description": "The post's text, in full, as shown"
+    },
+    "media": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "What is attached: image, video, document, article, poll — or null"
+    },
+    "reactions": {
+      "type": "integer",
+      "description": "The count the `<n> reactions` link shows; 0 when none"
+    },
+    "comments": {
+      "type": "integer",
+      "description": "The count the `<n> comments` link shows; 0 when none"
+    },
+    "reposts": {
+      "type": "integer",
+      "description": "The count the `<n> reposts` link shows; 0 when none"
+    }
+  }
+}

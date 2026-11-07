@@ -1,0 +1,104 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "ends",
+    "evidence",
+    "conversations",
+    "more"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "failed"
+      ]
+    },
+    "ends": {
+      "type": "string",
+      "description": "The page the run is on after, by its id — or unknown"
+    },
+    "at": {
+      "type": "string",
+      "description": "Only when failed: the step the method stopped at"
+    },
+    "message": {
+      "type": "string",
+      "description": "What LinkedIn said, word for word: a notice, an error, an empty state"
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the page showed, in LinkedIn's terms"
+    },
+    "conversations": {
+      "type": "array",
+      "description": "The conversations, newest first",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "participants",
+          "when",
+          "preview",
+          "lastSender",
+          "active",
+          "unread"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The entry's heading: the member, or the group's name"
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Everyone the options button names, the signed-in member first"
+          },
+          "when": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The last message's time as shown: 7:44 PM, Oct 21, Friday"
+          },
+          "preview": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The last message as shown, with its You: or <First name>: prefix"
+          },
+          "lastSender": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "you",
+              "them",
+              null
+            ],
+            "description": "Who sent the last message, from the preview's prefix; null when it has none"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether it is the conversation open on the right"
+          },
+          "unread": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "more": {
+      "type": "boolean",
+      "description": "Whether the list offered to load more"
+    }
+  }
+}

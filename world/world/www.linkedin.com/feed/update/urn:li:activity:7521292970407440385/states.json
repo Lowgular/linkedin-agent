@@ -1,0 +1,14 @@
+{
+  "page": "www.linkedin.com/feed/update/urn:li:activity:7521292970407440385",
+  "initial": "a70c32a48a7e",
+  "states": {
+    "a70c32a48a7e": {
+      "title": "Post | LinkedIn",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7521292970407440385/",
+      "capturedAt": "2026-11-04T06:38:15.836Z",
+      "updatedAt": "2026-11-04T06:52:39.547Z",
+      "updated": "after a change"
+    }
+  },
+  "transitions": []
+}

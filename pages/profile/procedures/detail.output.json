@@ -1,0 +1,70 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "headline",
+    "degree",
+    "location",
+    "followers",
+    "company",
+    "school",
+    "url"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The heading of the top card"
+    },
+    "headline": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The line under the name, as shown"
+    },
+    "location": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The place beside the Contact info link, as shown"
+    },
+    "degree": {
+      "type": "string",
+      "enum": [
+        "1st",
+        "2nd",
+        "3rd+",
+        "self",
+        "none"
+      ],
+      "description": "What follows the name; self when it is the signed-in member's own profile; none when nothing shows"
+    },
+    "followers": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "The profile owner's follower count from the top card or the Activity section header, e.g. 2,850 followers as 2850; check Activity when absent from the top card, and return null only when neither location shows a count"
+    },
+    "company": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The first of the buttons with a logo under the headline, when there is one"
+    },
+    "school": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The second of those buttons, when there is one"
+    },
+    "url": {
+      "type": "string",
+      "description": "The profile's address, https://www.linkedin.com/in/<slug>/, from the Contact info link without its /overlay/contact-info/"
+    }
+  }
+}

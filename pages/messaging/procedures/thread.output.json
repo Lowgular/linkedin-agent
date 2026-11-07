@@ -1,0 +1,107 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "ends",
+    "evidence",
+    "member",
+    "group",
+    "messages"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "failed"
+      ]
+    },
+    "ends": {
+      "type": "string",
+      "description": "The page the run is on after, by its id — or unknown"
+    },
+    "at": {
+      "type": "string",
+      "description": "Only when failed: the step the method stopped at"
+    },
+    "message": {
+      "type": "string",
+      "description": "What LinkedIn said, word for word: a notice, an error, an empty state"
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the page showed, in LinkedIn's terms"
+    },
+    "member": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "headline",
+        "url"
+      ],
+      "description": "The member the conversation is with; null for a group conversation",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The heading of the conversation's header"
+        },
+        "headline": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Under the name, as shown"
+        },
+        "url": {
+          "type": "string",
+          "description": "The member's profile address the header links to, https://www.linkedin.com/in/<id>/"
+        }
+      }
+    },
+    "group": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The group's name when the conversation is a group, with its member count: Lowgular | AI-Native Marketing (9 members)"
+    },
+    "messages": {
+      "type": "array",
+      "description": "The messages the pane shows, oldest first",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "mine",
+          "when",
+          "text"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Who sent it, by name"
+          },
+          "mine": {
+            "type": "boolean",
+            "description": "Whether the signed-in member sent it"
+          },
+          "when": {
+            "type": "string",
+            "description": "The date the pane last showed above it and the time beside it, as shown: Oct 12 2:52 PM, Friday 5:06 PM"
+          },
+          "text": {
+            "type": "string",
+            "description": "The text, as shown"
+          }
+        }
+      }
+    }
+  }
+}

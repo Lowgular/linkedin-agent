@@ -1,0 +1,113 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "ends",
+    "evidence",
+    "positions",
+    "hasMore"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "failed"
+      ]
+    },
+    "ends": {
+      "type": "string",
+      "description": "The page the run is on after, by its id — or unknown"
+    },
+    "at": {
+      "type": "string",
+      "description": "Only when failed: the step the method stopped at"
+    },
+    "message": {
+      "type": "string",
+      "description": "What LinkedIn said, word for word: a notice, an error, an empty state"
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the page showed, in LinkedIn's terms"
+    },
+    "positions": {
+      "type": "array",
+      "description": "The positions, in the card's order: newest first, a company's positions one after another",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "company",
+          "companyUrl",
+          "employment",
+          "dates",
+          "duration",
+          "location",
+          "description"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "company": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The company's name, from the position's lines or from above a company's list"
+          },
+          "companyUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The company's page, https://www.linkedin.com/company/<id>/, when the entry links to one"
+          },
+          "employment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Full-time, Part-time, Self-employed, Freelance, Contract, Internship … as shown"
+          },
+          "dates": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "As shown, before the ` · `: Jan 2025 - Present"
+          },
+          "duration": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "As shown, after the ` · `: 1 yr 10 mos"
+          },
+          "location": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "As shown"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "As shown, cut short where the card cuts it"
+          }
+        }
+      }
+    },
+    "hasMore": {
+      "type": "boolean",
+      "description": "Whether the card ends in a Show all experiences link"
+    }
+  }
+}

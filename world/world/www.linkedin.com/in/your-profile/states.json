@@ -1,0 +1,330 @@
+{
+  "page": "www.linkedin.com/in/your-profile",
+  "initial": "bb988816cfd5",
+  "states": {
+    "bb988816cfd5": {
+      "title": "Your Profile | LinkedIn",
+      "url": "https://www.linkedin.com/in/your-profile/",
+      "capturedAt": "2026-11-01T13:04:24.591Z",
+      "updatedAt": "2026-11-01T13:06:43.531Z",
+      "updated": "at the click"
+    },
+    "18014941cc86": {
+      "title": "Your Profile | LinkedIn",
+      "via": {
+        "tag": "a",
+        "role": "link",
+        "name": "4 reactions"
+      },
+      "post": "7521249598284124160",
+      "synth": true
+    },
+    "eb10779216c1": {
+      "title": "Your Profile | LinkedIn",
+      "via": {
+        "tag": "a",
+        "role": "link",
+        "name": "2 reactions"
+      },
+      "post": "7520548305781837824",
+      "synth": true
+    },
+    "9cd49845a949": {
+      "title": "Your Profile | LinkedIn",
+      "via": {
+        "tag": "a",
+        "role": "link",
+        "name": "3 reactions"
+      },
+      "post": "7518907410514857984",
+      "synth": true
+    },
+    "1c716f69ab0a": {
+      "title": "Your Profile | LinkedIn",
+      "via": {
+        "tag": "a",
+        "role": "link",
+        "name": "1 reaction"
+      },
+      "post": "7517963441299496961",
+      "synth": true
+    }
+  },
+  "transitions": [
+    {
+      "from": "bb988816cfd5",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Show all experiences",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[7]/div[1]/div[1]/section[1]/div[1]/div[2]/div[1]/div[3]/a[1]",
+        "href": "https://www.linkedin.com/in/your-profile/details/experience/?isSelfProfile=true&vieweeProfileId=ACoAA677b854a6fa55cfbf82695f0166832c972&lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base%3BEOFUctPuS4mbzrpI26y32Q%3D%3D"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/your-profile/details/experience"
+      }
+    },
+    {
+      "from": "bb988816cfd5",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Show all posts",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[5]/div[1]/section[1]/div[1]/div[1]/div[3]/div[1]/div[2]/a[1]",
+        "href": "https://www.linkedin.com/in/your-profile/recent-activity/all/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base%3BTp7NJarrSASoyZ%2FdHZmpkg%3D%3D"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/your-profile/recent-activity/all"
+      }
+    },
+    {
+      "from": "bb988816cfd5",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "2,863 followers",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[5]/div[1]/section[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]",
+        "href": "https://www.linkedin.com/feed/followers/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base%3B4YgvMGVGTHK7b8aYYThm3w%3D%3D"
+      },
+      "to": {
+        "page": "www.linkedin.com/mynetwork/network-manager/people-follow/followers"
+      }
+    },
+    {
+      "from": "bb988816cfd5",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "4 reactions",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[5]/div[1]/section[1]/div[1]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/section[1]/ul[1]/li[2]/div[1]/div[1]/div[2]/div[1]/a[3]",
+        "href": "https://www.linkedin.com/in/your-profile/"
+      },
+      "to": "18014941cc86",
+      "synth": true
+    },
+    {
+      "from": "18014941cc86",
+      "click": {
+        "tag": "button",
+        "role": "button",
+        "name": "Dismiss",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/button[1]",
+        "href": null
+      },
+      "to": "bb988816cfd5",
+      "synth": true
+    },
+    {
+      "from": "18014941cc86",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Weronika Sadowska • 1st Head of Product at Lantern Analytics · ex-fintech · writes about pricing",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]",
+        "href": "https://www.linkedin.com/in/weronika-sadowska-2k7f1/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/weronika-sadowska-2k7f1"
+      },
+      "synth": true
+    },
+    {
+      "from": "18014941cc86",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Igor Baranov • 1st Staff Engineer, payments infrastructure · on-call since 2014",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/a[1]",
+        "href": "https://www.linkedin.com/in/igor-baranov-8q3m2/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/igor-baranov-8q3m2"
+      },
+      "synth": true
+    },
+    {
+      "from": "18014941cc86",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Inês Ferreira • 1st Design Lead at Juniper Studio · design systems for regulated industries",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/a[1]",
+        "href": "https://www.linkedin.com/in/ines-ferreira-5d9x4/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/ines-ferreira-5d9x4"
+      },
+      "synth": true
+    },
+    {
+      "from": "18014941cc86",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Teodor Lis • 1st Founder at Beacon Cloud · hiring engineers in Warsaw",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[4]/a[1]",
+        "href": "https://www.linkedin.com/in/teodor-lis-7w1c9/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/teodor-lis-7w1c9"
+      },
+      "synth": true
+    },
+    {
+      "from": "bb988816cfd5",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "2 reactions",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[5]/div[1]/section[1]/div[1]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/section[1]/ul[1]/li[3]/div[1]/div[1]/div[2]/div[1]/a[2]",
+        "href": "https://www.linkedin.com/in/your-profile/"
+      },
+      "to": "eb10779216c1",
+      "synth": true
+    },
+    {
+      "from": "eb10779216c1",
+      "click": {
+        "tag": "button",
+        "role": "button",
+        "name": "Dismiss",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/button[1]",
+        "href": null
+      },
+      "to": "bb988816cfd5",
+      "synth": true
+    },
+    {
+      "from": "eb10779216c1",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Weronika Sadowska • 1st Head of Product at Lantern Analytics · ex-fintech · writes about pricing",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]",
+        "href": "https://www.linkedin.com/in/weronika-sadowska-2k7f1/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/weronika-sadowska-2k7f1"
+      },
+      "synth": true
+    },
+    {
+      "from": "eb10779216c1",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Igor Baranov • 1st Staff Engineer, payments infrastructure · on-call since 2014",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/a[1]",
+        "href": "https://www.linkedin.com/in/igor-baranov-8q3m2/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/igor-baranov-8q3m2"
+      },
+      "synth": true
+    },
+    {
+      "from": "bb988816cfd5",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "3 reactions",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[5]/div[1]/section[1]/div[1]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/section[1]/ul[1]/li[5]/div[1]/div[1]/div[2]/div[1]/a[2]",
+        "href": "https://www.linkedin.com/in/your-profile/"
+      },
+      "to": "9cd49845a949",
+      "synth": true
+    },
+    {
+      "from": "9cd49845a949",
+      "click": {
+        "tag": "button",
+        "role": "button",
+        "name": "Dismiss",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/button[1]",
+        "href": null
+      },
+      "to": "bb988816cfd5",
+      "synth": true
+    },
+    {
+      "from": "9cd49845a949",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Igor Baranov • 1st Staff Engineer, payments infrastructure · on-call since 2014",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]",
+        "href": "https://www.linkedin.com/in/igor-baranov-8q3m2/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/igor-baranov-8q3m2"
+      },
+      "synth": true
+    },
+    {
+      "from": "9cd49845a949",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Inês Ferreira • 1st Design Lead at Juniper Studio · design systems for regulated industries",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/a[1]",
+        "href": "https://www.linkedin.com/in/ines-ferreira-5d9x4/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/ines-ferreira-5d9x4"
+      },
+      "synth": true
+    },
+    {
+      "from": "9cd49845a949",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Teodor Lis • 1st Founder at Beacon Cloud · hiring engineers in Warsaw",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/a[1]",
+        "href": "https://www.linkedin.com/in/teodor-lis-7w1c9/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/teodor-lis-7w1c9"
+      },
+      "synth": true
+    },
+    {
+      "from": "bb988816cfd5",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "1 reaction",
+        "xpath": "/html/body[1]/div[1]/div[1]/div[2]/div[2]/div[1]/main[1]/div[1]/div[1]/section[1]/div[1]/div[1]/div[5]/div[1]/section[1]/div[1]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/section[1]/ul[1]/li[10]/div[1]/div[1]/div[2]/div[1]/a[3]",
+        "href": "https://www.linkedin.com/in/your-profile/"
+      },
+      "to": "1c716f69ab0a",
+      "synth": true
+    },
+    {
+      "from": "1c716f69ab0a",
+      "click": {
+        "tag": "button",
+        "role": "button",
+        "name": "Dismiss",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/button[1]",
+        "href": null
+      },
+      "to": "bb988816cfd5",
+      "synth": true
+    },
+    {
+      "from": "1c716f69ab0a",
+      "click": {
+        "tag": "a",
+        "role": "link",
+        "name": "Inês Ferreira • 1st Design Lead at Juniper Studio · design systems for regulated industries",
+        "xpath": "/html/body[1]/div[1]/dialog[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]",
+        "href": "https://www.linkedin.com/in/ines-ferreira-5d9x4/"
+      },
+      "to": {
+        "page": "www.linkedin.com/in/ines-ferreira-5d9x4"
+      },
+      "synth": true
+    }
+  ]
+}

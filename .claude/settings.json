@@ -1,0 +1,32 @@
+{
+  "model": "haiku",
+  "disableClaudeAiConnectors": true,
+  "enableAllProjectMcpServers": true,
+  "permissions": {
+    "allow": [
+      "mcp__dev-browser",
+      "Read",
+      "Glob",
+      "Grep"
+    ],
+    "deny": [
+      "Bash",
+      "Write",
+      "Edit",
+      "MultiEdit",
+      "NotebookEdit",
+      "WebFetch",
+      "WebSearch",
+      "Task"
+    ]
+  },
+  "enabledPlugins": {
+    "langsmith-tracing@langsmith-claude-code-plugins": true
+  },
+  "env": {
+    "TRACE_TO_LANGSMITH": "true",
+    "LANGSMITH_ENDPOINT": "https://eu.api.smith.langchain.com",
+    "CC_LANGSMITH_PROJECT": "linkedin-po",
+    "CC_LANGSMITH_METADATA": "{\"repo\":\"linkedin-agent\",\"agent\":\"linkedin-po\",\"harness\":\"claude-code\"}"
+  }
+}
