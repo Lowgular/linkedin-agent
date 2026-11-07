@@ -97,8 +97,10 @@ docker compose run --rm eval-results                 # the latest runs and their
 ```
 
 `-m flash-lite` picks a cheaper model, `-h claude-code -m haiku` another CLI, `-v 0.2.1` a dataset
-version (`eval/linkedin_eval/run.py`). The grader in every task reads the agent's answer with Claude
-Haiku, so `.env` needs `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` besides the Gemini key. The
+version (`eval/linkedin_eval/run.py`). The grader in every task reads the agent's answer with an
+extractor: Claude Haiku by default, which needs `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` in
+`.env`; `-x gemini` uses Gemini Flash-Lite on the same `GEMINI_API_KEY` as the agent, and a `.env`
+with only the Gemini key gets Gemini without the flag. The
 trials' files stay in the `linkedin-agent-jobs` volume, which the eval container mounts where Docker
 keeps it, so the paths Harbor hands to Docker mean the same folder on macOS, Windows and Linux.
 

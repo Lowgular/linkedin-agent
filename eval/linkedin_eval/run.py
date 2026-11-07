@@ -4,12 +4,15 @@
     docker compose run --rm eval -i profile-followers     one task (-i again for more)
     docker compose run --rm eval -m flash-lite            another model: an alias below or a provider/model id
     docker compose run --rm eval -h claude-code -m haiku  another CLI: claude-code, codex, gemini-cli, opencode
+    docker compose run --rm eval -x gemini                the grader's extractor on Gemini instead of Claude Haiku
 
 Harbor runs here and starts one container per task on the host's Docker, through its socket. It mounts
 each trial's log folder into that container by path, and the host's Docker resolves that path on its
 own side — so the jobs live in a named volume, mounted here at the very path where Docker keeps that
 volume: the same path means the same folder to both, on macOS, Windows and Linux alike. The grader in
-every task needs a login for its extractor (ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN in .env).
+every task reads the agent's answer with an extractor: Claude Haiku by default (ANTHROPIC_API_KEY or
+CLAUDE_CODE_OAUTH_TOKEN in .env), Gemini with -x gemini (GEMINI_API_KEY); with only a Gemini key in .env the
+grader picks Gemini by itself.
 """
 import json
 import os
@@ -49,7 +52,7 @@ def check_jobs_volume() -> None:
 
 
 def main(argv: list[str]) -> None:
-    harness, model, version, path, rest = "gemini-cli", "", "", "", []
+    harness, model, version, path, extractor, rest = "gemini-cli", "", "", "", "", []
     args = iter(argv)
     for a in args:
         if a == "-h":
@@ -60,10 +63,16 @@ def main(argv: list[str]) -> None:
             version = next(args, "")
         elif a == "-p":
             path = next(args, "")
+        elif a == "-x":
+            extractor = next(args, "")
         else:
             rest.append(a)
     if not harness:
-        fail("usage: eval [-h gemini-cli|claude-code|codex|opencode] [-m model] [-v dataset version | -p dataset folder] [Harbor options]")
+        fail("usage: eval [-h gemini-cli|claude-code|codex|opencode] [-m model] [-x claude|gemini] [-v dataset version | -p dataset folder] [Harbor options]")
+    if extractor and extractor not in ("claude", "gemini"):
+        fail(f"-x takes claude or gemini, not {extractor}")
+    if extractor:
+        os.environ["EXTRACTOR"] = extractor  # Harbor hands it to each task, whose grader reads it
     check_jobs_volume()
     model = ALIASES.get(model, model)
     dataset = ["-p", path] if path else ["-d", f"{DATASET}@{version}" if version else DATASET]
