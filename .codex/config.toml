@@ -5,12 +5,12 @@ model_reasoning_effort = "medium"
 approval_policy = "never"
 sandbox_mode = "read-only"
 
-# The agent needs only file reading and the dev-browser MCP (see README.md);
+# The agent needs only file reading and the browser MCP (see README.md);
 # all bundled plugins are off.
 [features]
 plugins = false
 
 # Declared explicitly: relying on the ~/.codex/config.toml entry alone does not
-# mount dev-browser under the shared app-server daemon.
-[mcp_servers.dev-browser]
+# mount the browser MCP under the shared app-server daemon.
+[mcp_servers.browser-mcp]
 url = "http://127.0.0.1:9333/mcp"

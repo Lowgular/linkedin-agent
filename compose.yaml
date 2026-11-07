@@ -1,30 +1,33 @@
-# compose.yaml — the agent and its world, for any machine with Docker: nothing installed on the host.
+# compose.yaml — the agent and its browser, for any machine with Docker: nothing installed on the host.
 #
-#   cp .env.example .env            then put your Gemini API key in it (Gemma 4 on the free tier costs nothing)
-#   docker compose run --rm agent   Gemini CLI in this folder, the world started first; ask it about your profile
-#   docker compose up -d world      the world alone, for a CLI installed on this machine (http://127.0.0.1:9333/mcp)
-#   docker compose down             stop everything
+#   cp .env.example .env              then put your Gemini API key in it
+#   docker compose run --rm agent     Gemini CLI in this folder, the browser started first; ask it about your profile
+#   docker compose up -d dev-browser  the browser alone: CDP at localhost:9224, for chrome://inspect or a CLI on
+#                                     this machine with browser-mcp started there (browser-mcp/README.md)
+#   docker compose down               stop everything
 #
-# The agent container shares the world's network, so inside it the MCP is at 127.0.0.1:9333, exactly as the
-# folder's .gemini/settings.json says, and the same address a CLI on the host uses through the mapped port.
-# Sessions and the CLI's own state persist in the gemini-home volume; the folder itself is yours, bind-mounted,
-# so what you change in the brief or the wiki is what the next run reads.
+# The world is not here: it is a static site (world/, published by world/deploy.sh), and the browser's fake
+# proxies LinkedIn's names to it. The agent container shares the browser's network: its entrypoint starts
+# browser-mcp on 127.0.0.1:9333, as the folder's .gemini/settings.json says, attached to the browser's CDP on
+# 127.0.0.1:9222. Sessions and the CLI's own state persist in the gemini-home volume; the folder itself is
+# yours, bind-mounted, so what you change in the brief or the wiki is what the next run reads.
 # The project's name is fixed, so the volumes keep their names whatever the clone's folder is called.
 name: linkedin-agent
 services:
-  world:
-    # Built here from world/ on the runtime image (the fake, a Chromium and the dev-browser MCP), which is
-    # pulled from GHCR; the tag is the one the dataset's tasks are FROM, so Harbor finds it locally too.
-    image: ghcr.io/lowgular/linkedin-world:0.3.2
-    build:
-      context: ./world
-      args:
-        RUNTIME: ghcr.io/lowgular/browser-use-faker:0.2.2
+  dev-browser:
+    # The browser, built here from dev-browser/: a headless Chromium with its CDP on 9222, resolving LinkedIn's
+    # names to a proxy that fetches every page from the world's site (WORLD_URL). No browser tools here: the
+    # agent brings its own (browser-mcp/) and attaches over CDP. The tag is the one the dataset's tasks are FROM.
+    build: ./dev-browser
+    image: ghcr.io/lowgular/dev-browser:0.3.0
     pull_policy: build
+    environment:
+      WORLD_URL: ${WORLD_URL:-https://linkedin-stub.web.app}
     ports:
-      - "127.0.0.1:9333:9333"
+      - "127.0.0.1:9224:9222"   # CDP: chrome://inspect (Configure... localhost:9224), or a browser-mcp on this machine
+      - "127.0.0.1:4443:4443"   # the world: https://localhost:4443/__world/ lists it (accept the certificate)
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://127.0.0.1:9333/health"]
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:9222/json/version"]
       interval: 2s
       timeout: 3s
       retries: 45
@@ -32,14 +35,20 @@ services:
   agent:
     build: .
     image: ghcr.io/lowgular/linkedin-agent:0.1.0
-    network_mode: "service:world"
+    network_mode: "service:dev-browser"
     depends_on:
-      world:
+      dev-browser:
         condition: service_healthy
+      collector:                # with the trace profile only: started with the agent, so its traces have somewhere to go
+        condition: service_started
+        required: false
     env_file:
       - path: .env
         required: false
     environment:
+      # browser-mcp, started by the image's entrypoint, attaches to dev-browser's CDP. The agent shares the
+      # browser's network, so that is loopback: Chromium accepts CDP only by IP or localhost, not by a name.
+      BROWSER_MCP_CDP: http://127.0.0.1:9222
       # Tracing to Google Cloud, on when .env names a project (and COMPOSE_PROFILES=trace starts the collector):
       # the CLI sends its telemetry over OTLP to the collector service, which ships every model request and
       # tool call as a span to Cloud Trace, the events to Cloud Logging, token counts to Cloud Monitoring.
@@ -64,9 +73,9 @@ services:
     # this machine (`gcloud auth application-default login`), mounted read-only.
     image: otel/opentelemetry-collector-contrib:0.140.0
     profiles: ["trace"]
-    network_mode: "service:world"
+    network_mode: "service:dev-browser"
     depends_on:
-      - world
+      - dev-browser
     command: ["--config=/etc/otelcol/collector.yaml"]
     user: "0:0"
     environment:
@@ -87,6 +96,9 @@ services:
     env_file:
       - path: .env
         required: false
+    environment:
+      # A build of dataset/ (dataset/build.sh) runs instead of the Hub's, when there is one; -v runs the Hub's.
+      DATASET_DIR: /app/dataset/dist
     volumes:
       - .:/app:ro
       - /var/run/docker.sock:/var/run/docker.sock

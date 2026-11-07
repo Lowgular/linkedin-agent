@@ -72,7 +72,8 @@ const isReactionsLink = n => n.t === 'a' && elements(n).length && REACTIONS.test
 const plural = n => `${n} ${n === 1 ? 'reaction' : 'reactions'}`;
 
 // ---- the world on disk ----
-const pageDir = page => path.join(worldDir, page);
+// On disk ':' and the other characters Windows cannot hold in a name are percent-encoded (urn%3Ali%3Aactivity%3A…).
+const pageDir = page => path.join(worldDir, page.split('/').map(seg => seg.replace(/[:*?"<>|]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'))).join('/'));
 const readStates = page => JSON.parse(readFileSync(path.join(pageDir(page), 'states.json'), 'utf8'));
 const writeStates = (page, data) => writeFileSync(path.join(pageDir(page), 'states.json'), JSON.stringify(data, null, 2) + '\n');
 const readState = (page, id) => JSON.parse(readFileSync(path.join(pageDir(page), id + '.json'), 'utf8'));

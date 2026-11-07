@@ -3,42 +3,46 @@
 A small slice of LinkedIn, recorded from the live site and then authored, that this agent runs
 against and the `lowgular/linkedin-po` dataset plays: my profile, my posts, the people who reacted
 to them and their profiles. Nothing in it is a real person: every name, headline, post and
-identifier is invented or replaced. It ships as a Docker image, `ghcr.io/lowgular/linkedin-world:<version>`
-(`world.toml`), that every task of the dataset is FROM: `browser-use-faker`'s runtime image with
-`world/` at `/opt/world`.
+identifier is invented or replaced. It is published as a static site on Firebase Hosting
+(`world.toml` names it), and the browser everything runs on — the `dev-browser` image — fetches its
+pages from there under LinkedIn's own names.
 
 ```
-world.toml      the image's name and version, and the runtime image it is built on — bump the version when world/ changes
-world/          the pages, as browser-use-faker serves them: one DOM state per page and per click, keyed by URL
+world.toml      the world's version, the runtime image, and the Firebase site it is published at
+world/          the pages, as the fake serves them: one DOM state per page and per click, keyed by URL
 world.json      the loop the world is authored for: four invented people, and for every post who reacted, its age, its impressions
 templates/      what compose.mjs composes from, harvested once from the recording and committed
 compose.mjs     rewrites the world from world.json: counts, dialogs and facepiles on every page a post is seen on, a profile per person
 walk.mjs        walks the loop against a served world and says what holds
-Dockerfile      the image: the runtime world.toml names, plus world/ at /opt/world
-image.sh        builds the image, --push builds it for both architectures and pushes it
-run.sh          runs the image here without compose: the dev-browser MCP at http://127.0.0.1:9333/mcp
+deploy.sh       exports world/ as a static site (site/, ignored) with the runtime image and deploys it to Firebase
 ```
+
+On disk the characters Windows cannot hold in a file name are percent-encoded: a post's folder is
+`urn%3Ali%3Aactivity%3A…`, its address `urn:li:activity:…`.
 
 The recording, the scrub that anonymizes it and the map from the people recorded to the people
 invented are not here: they live in `worlds/linkedin-po` of the private `marek` repository, whose
 import writes into this folder. What is here is the result, and the tools that compose and check it.
 
-## Running it
+## How it is served
 
-```sh
-docker compose up -d world    # from the repository root; or, here, ./run.sh
-./run.sh clicks               # what the agent clicked so far, by accessible name
-docker compose down
+```
+local Docker: dev-browser (Chromium with CDP on 9222 + the fake); the agent's browser-mcp attaches over CDP
+   Chromium resolves www.linkedin.com, static.licdn.com, media.licdn.com to the fake
+   the fake, with FAKER_UPSTREAM set, is a proxy: it fetches each path from the site
+        │  www.linkedin.com/<path>  →  <site>/<path>;   another host  →  <site>/__h/<host>/<path>
+        ▼
+Firebase Hosting: a shell per page, its states as JSON, the assets; the shell rebuilds the state in the browser
 ```
 
-The container starts three things: the fake serving `world/` over HTTPS under LinkedIn's own host
-names, a headless Chromium whose resolver maps those names to the fake, and the real dev-browser
-service attached to that Chromium. An agent opens `https://www.linkedin.com/…` through the MCP and
-sees the recorded page, with the accessibility tree the live page had; a click the recording holds
-moves to the recorded next state, a click it does not hold does nothing and is logged, a page that
-was never walked is answered "Not recorded". The MCP inside binds loopback and checks the Host
-header; the entrypoint relays it to the container's other interfaces, so the host maps 9333 onto
-9333 and nothing else: another host port fails the Host check.
+An agent opens `https://www.linkedin.com/…` through the MCP and sees the recorded page, with the
+accessibility tree the live page had; a click the recording holds moves to the recorded next state, a
+click it does not hold does nothing; a page that was never walked is answered "Not recorded". Clicks are
+logged where the browser runs, in `/logs/agent/faker-clicks.jsonl`, not on the site. `/in/me/`
+redirects to the signed-in member's profile, as on LinkedIn.
+
+`docker compose up -d dev-browser` from the repository root starts it; `https://localhost:4443/__world/`
+lists the world, and `chrome://inspect` at `localhost:9224` shows the agent's page live.
 
 ## The loop
 
@@ -59,28 +63,32 @@ live page reads too.
 To change who reacted, or a post's age or impressions, edit `world.json` and run `node compose.mjs`;
 to add a person, add them to `world.json` with a name, a headline, a location, a connections count
 and an About. The composed dialog and profile states are marked `synth` and remade on every run.
-Then prove the loop holds, inside the container `run.sh` started, since its services bind loopback:
+Then deploy (below) and prove the loop holds, against the browser's CDP:
 
 ```sh
-docker cp walk.mjs linkedin-world:/tmp/ && docker cp world.json linkedin-world:/tmp/
-docker exec linkedin-world node /tmp/walk.mjs --cdp http://127.0.0.1:9222 --base https://www.linkedin.com
+docker compose up -d dev-browser
+(cd browser-mcp && npm install)     # walk.mjs drives the browser with the playwright-core installed there
+node world/walk.mjs --cdp http://localhost:9224 --base https://www.linkedin.com
 ```
 
-## The image
+## Publishing it
 
 ```sh
-./image.sh            # ghcr.io/lowgular/linkedin-world:<version>, for this machine's architecture
-./image.sh --push     # for linux/amd64 and linux/arm64, pushed under one tag, so it runs anywhere
+./deploy.sh --dry-run   # site/public: what would be deployed
+./deploy.sh             # exported and deployed to the Firebase site world.toml names
 ```
 
-When `world/` changes: bump the version in `world.toml`, `./image.sh --push`, then point the
-dataset's `shared/environment/Dockerfile` (marek, `datasets/linkedin-po`) at the new tag and
-republish the dataset. Images are never moved: a tag names one world for good. Pulling needs no
-login once the package is public on GHCR; pushing needs a GitHub token with `write:packages`
-(`docker login ghcr.io`).
+The export runs in the runtime image, so it needs Docker only; the deploy needs Node for `npx
+firebase-tools` and a Firebase login once (`npx firebase-tools login`). When `world/` changes: bump the
+version in `world.toml` and deploy. The site holds one world, the latest: the dataset's tasks fetch
+whatever is deployed, so a change that moves a fact needs the dataset's expectations changed with it.
+The pages carry `noindex` and the site's root says it is a test fixture.
 
 ## Versions
 
+- 0.3.3: `/in/me/` redirects to the signed-in member's profile, as on LinkedIn, so an agent finds
+  "my profile" without being told its address. Published as a static site instead of an image; the
+  `dev-browser` 0.3.0 proxies to it. Folder names percent-encoded for Windows.
 - 0.3.2: the same pages on runtime `browser-use-faker` 0.2.2, whose entrypoint relays the MCP to the
   container's interfaces, so `-p 127.0.0.1:9333:9333` is all a host needs; built for linux/amd64 and
   linux/arm64. Dockerfile in this folder.

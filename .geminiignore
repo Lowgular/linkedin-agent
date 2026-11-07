@@ -1,0 +1,6 @@
+# What the agent's file tools never see: the repository around the agent. The dataset holds the answers
+# to the eval's questions; the world, the eval and the tracing are not the agent's to read.
+dataset/
+world/
+eval/
+telemetry/

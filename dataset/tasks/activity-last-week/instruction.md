@@ -1,0 +1,1 @@
+Open the page with all my posts and tell me which posts I published in the last 7 days, newest first. For each one give the opening of the post, its reactions and its impressions, then add up the reactions and the impressions of those posts.

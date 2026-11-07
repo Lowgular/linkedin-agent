@@ -1,8 +1,9 @@
 {
   "mcpServers": {
-    "dev-browser": {
+    "browser-mcp": {
       "url": "http://127.0.0.1:9333/mcp",
-      "type": "http"
+      "type": "http",
+      "trust": true
     }
   },
   "model": {
@@ -11,6 +12,16 @@
   "context": {
     "fileName": [
       "AGENTS.md"
+    ]
+  },
+  "tools": {
+    "exclude": [
+      "run_shell_command",
+      "write_file",
+      "replace",
+      "web_fetch",
+      "google_web_search",
+      "save_memory"
     ]
   }
 }

@@ -1,0 +1,24 @@
+{
+  "answer": {
+    "education": [
+      {
+        "school": {
+          "name": "Summit Software",
+          "link": "https://www.linkedin.com/school/summit-software/"
+        },
+        "degree": "Master of Science (M.Sc.), Software Development and Technology: Software Engineering",
+        "from": "2010",
+        "to": "2015"
+      },
+      {
+        "school": {
+          "name": "Summit Digital",
+          "link": "https://www.linkedin.com/school/summit-digital/"
+        },
+        "degree": "Bachelor's degree, Software Development and Technology",
+        "from": "2003",
+        "to": "2007"
+      }
+    ]
+  }
+}

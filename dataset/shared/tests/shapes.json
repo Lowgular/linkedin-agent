@@ -1,0 +1,109 @@
+{
+  "why": "The vocabulary of every task's facts (tests/expected.json). An answer object is built from these shapes, with the fields the question asks for; the grader derives the extractor's tool schema from the facts and describes each field from here, and compares fact by fact. A thing with a link — an account, a post, a company, a school — is identified by any one of its identity fields (its name or its link, a post also its opening words): one fact, passed when any matches. `keys` says which key, in the facts, holds which shape.",
+  "shapes": {
+    "account": {
+      "what": "a person as a card, an avatar or a row of the reactions dialog shows them",
+      "identity": [
+        "name",
+        "link"
+      ],
+      "fields": {
+        "name": "the full name as shown",
+        "link": "the profile URL, https://www.linkedin.com/in/<slug>/",
+        "headline": "the line under the name"
+      }
+    },
+    "profile": {
+      "what": "a person's own profile page: the top card and the About section",
+      "identity": [
+        "name",
+        "link"
+      ],
+      "fields": {
+        "name": "the full name as shown",
+        "link": "the profile URL, https://www.linkedin.com/in/<slug>/",
+        "headline": "the line under the name",
+        "location": "as the top card shows it",
+        "connections": "as shown: 312, or 500+",
+        "followers": "a number",
+        "about": "the text of the About section"
+      }
+    },
+    "company": {
+      "what": "a company as the Experience section shows it",
+      "identity": [
+        "name",
+        "link"
+      ],
+      "fields": {
+        "name": "the company's name",
+        "link": "its page, https://www.linkedin.com/company/<slug>/"
+      }
+    },
+    "school": {
+      "what": "a school as the Education section shows it",
+      "identity": [
+        "name",
+        "link"
+      ],
+      "fields": {
+        "name": "the school's name",
+        "link": "its page, https://www.linkedin.com/school/<slug>/"
+      }
+    },
+    "position": {
+      "what": "one entry of the Experience section",
+      "fields": {
+        "position": "the title",
+        "company": "a company",
+        "type": "the employment type when shown: Full-time, Part-time, ...",
+        "from": "the start, as shown: Apr 2026",
+        "to": "the end, as shown: Jul 2022, or Present",
+        "duration": "as shown: 8 mos, 2 yrs 3 mos",
+        "location": "as shown",
+        "description": "the entry's text"
+      }
+    },
+    "education": {
+      "what": "one entry of the Education section",
+      "fields": {
+        "school": "a school",
+        "degree": "the degree and the field, as the one line shows them",
+        "from": "the start year",
+        "to": "the end year"
+      }
+    },
+    "post": {
+      "what": "one of my posts, as a card on my profile or my activity page shows it, or on its own page",
+      "identity": [
+        "link",
+        "text"
+      ],
+      "fields": {
+        "link": "the post's page, https://www.linkedin.com/feed/update/urn:li:activity:<id>/",
+        "posted": "its age as LinkedIn shows it: 6d is 6 days ago, 1w is 1 week ago, 2w is 2 weeks ago",
+        "edited": "true when the card marks the post Edited",
+        "text": "the post's opening words, verbatim",
+        "reactions": "the count of reactions",
+        "comments": "the count of comments",
+        "reposts": "the count of reposts",
+        "impressions": "the count of impressions",
+        "reactors": "the accounts that reacted, in the dialog's order"
+      }
+    }
+  },
+  "keys": {
+    "profile": "profile",
+    "post": "post",
+    "posts": "post",
+    "position": "position",
+    "positions": "position",
+    "company": "company",
+    "school": "school",
+    "education": "education",
+    "reactors": "account",
+    "reactor": "account",
+    "account": "account",
+    "accounts": "account"
+  }
+}

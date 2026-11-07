@@ -1,0 +1,1 @@
+Open https://www.linkedin.com/feed/update/urn:li:activity:7517963441299496961/, open its list of reactions, go to the profile of the person who reacted and tell me their name, headline, location and what their About section says.

@@ -5,7 +5,7 @@
     "run": {
       "type": "string",
       "pattern": "^[a-f0-9]{16}$",
-      "description": "Session ID from dev-browser session_start"
+      "description": "Session ID from browser-mcp session_start"
     },
     "tab": {
       "type": "string",

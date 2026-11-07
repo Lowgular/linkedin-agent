@@ -1,6 +1,6 @@
 # Using the generic browser tools on LinkedIn
 
-`dev-browser` supplies only generic browser operations. Every page call includes
+`browser-mcp` supplies only generic browser operations. Every page call includes
 `run` and `tab`. Ref actions additionally include the latest `captureId` and ref.
 
 - `capture`: whole page by default, or one element selected with `selector`.

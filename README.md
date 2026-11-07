@@ -2,8 +2,8 @@
 
 A browser agent for LinkedIn, built the way an agent should be built: against a world you can replay,
 scored fact by fact, traced turn by turn. The agent is a folder that a coding CLI starts in. Gemini CLI
-reads the brief in `AGENTS.md` and the wiki under `pages/`, and drives a browser through one MCP server,
-dev-browser. The browser does not open the real LinkedIn: it opens `world/`, a recorded and authored
+reads the brief in `AGENTS.md` and the wiki under `pages/`, and drives a browser through its own MCP server,
+`browser-mcp/`, which attaches to any browser over CDP. The browser, `dev-browser`, runs in Docker. It does not open the real LinkedIn: it opens `world/`, a recorded and authored
 LinkedIn served as a fake, in a Docker container. Nothing in it is a real person, and nothing the agent
 clicks reaches a real account.
 
@@ -37,8 +37,10 @@ Open `.env` and put your key after `GEMINI_API_KEY=`. Then build everything once
 docker compose --profile eval build
 ```
 
-This builds three images from this folder: the world, the agent's Gemini CLI, and the eval. It pulls one
-image from GitHub's registry, the browser runtime the world sits on.
+This builds two images from this folder, the agent (Gemini CLI and its browser tools, `browser-mcp`) and
+the eval, and pulls one from GitHub's registry: `dev-browser`, the browser. The world itself is not on your machine: the
+browser fetches its pages from the site it is published at (`world/README.md`), so the agent needs the
+internet, as Gemini does anyway.
 
 ## Talk to the agent
 
@@ -46,7 +48,7 @@ image from GitHub's registry, the browser runtime the world sits on.
 docker compose run --rm agent
 ```
 
-The world starts first, then Gemini CLI opens in this folder. Ask what a person would ask:
+The browser starts first, then Gemini CLI opens in this folder. Ask what a person would ask:
 
 - How many followers does my profile have?
 - Who reacted to my latest post?
@@ -58,10 +60,18 @@ you change `AGENTS.md` or a page in `pages/`, the next session reads the change.
 To see what the agent clicked:
 
 ```sh
-docker compose exec world cat /logs/agent/faker-clicks.jsonl
+docker compose exec dev-browser cat /logs/agent/faker-clicks.jsonl
 ```
 
-When you are done, `docker compose down` stops the world.
+To see the world yourself, while the browser runs (`docker compose up -d dev-browser` starts it alone):
+
+- **https://localhost:4443/__world/** lists every recorded page; click through them as you would on LinkedIn.
+  The certificate is self-signed: accept it once (Advanced, then Proceed).
+- **The agent's own browser, live:** open `chrome://inspect` in Chrome, click Configure..., add
+  `localhost:9224`, and click "inspect" under the page that appears. You watch the page while the agent
+  clicks through it.
+
+When you are done, `docker compose down` stops the browser.
 
 ## Score it
 
@@ -116,9 +126,11 @@ leaves your machine.
 
 ## If something does not work
 
-- **The agent cannot reach the browser.** Port 9333 on your machine must be free: the MCP server answers
-  only on `127.0.0.1:9333`. `docker compose logs world` shows the world's three services starting.
-- **The first build fails pulling `browser-use-faker`.** The runtime image is not reachable from your
+- **The agent cannot reach the browser.** `docker compose logs dev-browser` shows the browser and the fake
+  starting; ports 9224 and 4443 on your machine must be free.
+- **Pages say "did not answer" or stay empty.** The browser cannot reach the world's site: check the
+  internet connection, and `WORLD_URL` in `.env` if you set it.
+- **The first build fails pulling `dev-browser`.** The browser image is not reachable from your
   network or not public yet. Tell the presenter.
 - **The eval says the dataset is not on Harbor Hub.** The version you asked for is not published, or not
   public.
@@ -132,16 +144,20 @@ AGENTS.md               the brief; Gemini CLI reads it through .gemini/settings.
                         Claude Code through the CLAUDE.md link (GEMINI.md is a link too, for older setups)
 pages/                  the wiki: one document per LinkedIn page, the procedures it offers, their schemas
 memories/               what the agent knows about the browser tools
-.gemini/                Gemini CLI's settings for this folder: the dev-browser MCP server and the model
+browser-mcp/            the browser tools: an MCP server over any browser's CDP (browser-mcp/README.md)
+.gemini/                Gemini CLI's settings for this folder: the browser MCP server, the tools the agent may not use, the model
 .claude/ .codex/        the same for Claude Code and Codex
-world/                  the world: its pages, the loop it is authored for, its image (world/README.md)
+world/                  the world: its pages, the loop it is authored for, its deploy to Firebase (world/README.md)
+dataset/                the eval's questions and facts, the source of lowgular/linkedin-po (dataset/README.md)
 eval/                   the eval image: Harbor, the harness that uploads this folder, the runner
 telemetry/              the OpenTelemetry collector for Cloud Trace
-compose.yaml            the world, the agent, the eval, the collector
+compose.yaml            the browser, the agent, the eval, the collector
 Dockerfile              the agent image: Node and Gemini CLI
 .env.example            the keys, copied to .env, which git ignores
 ```
 
-Any CLI installed on your own machine works against the world too: `docker compose up -d world` starts it
-alone, and `gemini`, `claude`, `codex` or `opencode` in this folder find the MCP server through their
-settings here.
+Any CLI installed on your own machine works against the world too, with Node: `docker compose up -d
+dev-browser` starts the browser alone, `BROWSER_MCP_CDP=http://localhost:9224 npm start` in `browser-mcp/`
+(after `npm install`) starts the tools, and `gemini`, `claude`, `codex` or `opencode` in this folder find them
+at `127.0.0.1:9333` through their settings here. The same tools attach to a Chrome of your own, or to a cloud
+browser's CDP address.

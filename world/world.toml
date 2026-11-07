@@ -1,8 +1,11 @@
-# The world image: the runtime image (`runtime`: browser-use-faker's — the fake, a Chromium, the dev-browser
-# MCP service, all started by its entrypoint) with world/ at /opt/world, built by image.sh from the
-# Dockerfile here, tagged with `version` and never moved. Bump the version when world/ changes; the dataset
-# (datasets/linkedin-po in github.com/Lowgular/marek) names the tag in its Dockerfile, compose.yaml names it too.
+# The world: world/ published as a static site (deploy.sh), which dev-browser's proxy fetches under LinkedIn's
+# own names. `version` names this state of world/ — bump it when world/ changes, it is what the dataset's README
+# cites.
 [world]
-image = "ghcr.io/lowgular/linkedin-world"
-version = "0.3.2"
-runtime = "ghcr.io/lowgular/browser-use-faker:0.2.2"
+version = "0.3.3"
+
+# Where it is published: a Firebase Hosting site in a Google Cloud project.
+[site]
+project = "gdg-edd"
+site = "linkedin-stub"
+url = "https://linkedin-stub.web.app"

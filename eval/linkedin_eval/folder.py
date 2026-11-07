@@ -27,7 +27,7 @@ from harbor.agents.installed.gemini_cli import GeminiCli as _GeminiCli, GeminiCl
 from harbor.agents.installed.opencode import OpenCode as _OpenCode, OpenCodeOptions
 
 # What never leaves the machine when a folder is uploaded.
-EXCLUDES = (".obsidian", ".DS_Store", "settings.local.json", ".env", ".env.*", "node_modules", ".git", "world", "eval", "telemetry")  # the world, the eval and the tracing are this repository's, not the agent's; the task image already has the world
+EXCLUDES = (".obsidian", ".DS_Store", "settings.local.json", ".env", ".env.*", "node_modules", ".git", "world", "eval", "telemetry", "dataset")  # the world, the eval, the tracing and the dataset are this repository's, not the agent's; the task image already has the world, and the dataset holds the answers
 WORKDIR = "/app"
 
 
@@ -58,6 +58,11 @@ class AgentFolder:
             await environment.upload_dir(staged / "agent", WORKDIR)
         finally:
             shutil.rmtree(staged, ignore_errors=True)
+        # The agent's browser tools: started from the folder, attached to the task's browser over CDP.
+        if (source / "browser-mcp" / "start.sh").is_file():
+            started = await environment.exec(command=f"sh {WORKDIR}/browser-mcp/start.sh", env={"BROWSER_MCP_LOG": "/logs/agent/browser-mcp.log"})
+            if started.return_code:
+                raise RuntimeError(f"browser-mcp did not start: {started.stderr or started.stdout}")
         # Which folder ran, by its own agent.json (name and version), kept with the trial's logs.
         if (source / "agent.json").is_file():
             self.logs_dir.mkdir(parents=True, exist_ok=True)

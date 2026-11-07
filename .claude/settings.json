@@ -4,7 +4,7 @@
   "enableAllProjectMcpServers": true,
   "permissions": {
     "allow": [
-      "mcp__dev-browser",
+      "mcp__browser-mcp",
       "Read",
       "Glob",
       "Grep"

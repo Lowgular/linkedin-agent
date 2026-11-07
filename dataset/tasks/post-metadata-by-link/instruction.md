@@ -1,0 +1,1 @@
+Open https://www.linkedin.com/feed/update/urn:li:activity:7521249598284124160/ and tell me how long ago it was posted, how many reactions, comments and reposts it has, and how many impressions it got.
