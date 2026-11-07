@@ -7,7 +7,7 @@ FROM node:24-slim
 LABEL org.opencontainers.image.source="https://github.com/Lowgular/linkedin-agent" \
       org.opencontainers.image.description="Gemini CLI for the linkedin-agent folder, mounted at /app"
 RUN apt-get update && apt-get install -y --no-install-recommends git curl ca-certificates && rm -rf /var/lib/apt/lists/* \
- && npm install -g @google/gemini-cli@0.47.0 \
+ && npm install -g @google/gemini-cli@0.67.0 \
  && mkdir -p /root/.gemini \
  && echo '{"security":{"auth":{"selectedType":"gemini-api-key"},"folderTrust":{"enabled":false}},"general":{"disableAutoUpdate":true,"disableUpdateNag":true}}' > /root/.gemini/settings.json \
  && echo '{"/app":"TRUST_FOLDER"}' > /root/.gemini/trustedFolders.json
