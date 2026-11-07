@@ -63,8 +63,10 @@ gcloud auth application-default login
 gcloud services enable cloudtrace.googleapis.com logging.googleapis.com monitoring.googleapis.com --project <project>
 ```
 
-Then Trace Explorer, `https://console.cloud.google.com/traces/explorer?project=<project>`, filtered on
-the span attribute `gen_ai.conversation.id`, the session's id, shows one run. Without a project and
+Then Trace Explorer, `https://console.cloud.google.com/traces/explorer?project=<project>`, lists one trace per
+conversation: the collector makes the session's id the trace id (the CLI itself starts a trace
+per turn), so a run is one waterfall, each turn a root (`llm_call`, then `schedule_tool_calls` with
+its `tool_call`s), and a session id from the CLI, dashes removed, opens it directly. Without a project and
 the profile nothing leaves the machine. The CLI's own direct export to Google Cloud wrote the logs
 but never the spans, hence the collector.
 

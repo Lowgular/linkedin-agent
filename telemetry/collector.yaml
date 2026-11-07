@@ -9,6 +9,31 @@ receivers:
       grpc:
         endpoint: 127.0.0.1:4317
 processors:
+  # One conversation, one trace. Gemini CLI starts a new trace for every turn, so a session would land in
+  # Cloud Trace as unrelated traces. Every record carries the session's id (resource attribute session.id,
+  # a UUID: 32 hex digits without its dashes, exactly a trace id), so the trace id becomes the session id —
+  # spans and log records alike, which keeps the logs linked to their waterfall. Each turn stays a root of
+  # its own inside that trace; span ids and parents are untouched.
+  transform/session:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        conditions:
+          - resource.attributes["session.id"] != nil
+        statements:
+          - set(attributes["session.trace_id"], resource.attributes["session.id"])
+          - replace_pattern(attributes["session.trace_id"], "-", "")
+          - set(trace_id.string, attributes["session.trace_id"])
+          - delete_key(attributes, "session.trace_id")
+    log_statements:
+      - context: log
+        conditions:
+          - resource.attributes["session.id"] != nil
+        statements:
+          - set(attributes["session.trace_id"], resource.attributes["session.id"])
+          - replace_pattern(attributes["session.trace_id"], "-", "")
+          - set(trace_id.string, attributes["session.trace_id"])
+          - delete_key(attributes, "session.trace_id")
   batch:
     send_batch_size: 200
     timeout: 2s
@@ -26,11 +51,11 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
+      processors: [transform/session, batch]
       exporters: [googlecloud, debug]
     logs:
       receivers: [otlp]
-      processors: [batch]
+      processors: [transform/session, batch]
       exporters: [googlecloud]
     metrics:
       receivers: [otlp]
