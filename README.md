@@ -40,13 +40,28 @@ docker compose exec world cat /logs/agent/faker-clicks.jsonl
 docker compose down                # stop the world; `-v` also forgets the CLI's sessions
 ```
 
-The model is Gemma 4 31B (`.gemini/settings.json`), free of charge on the Gemini API with a key
-that needs no billing; a few turns take a minute each. `/model` in the CLI switches to a Gemini
-model for speed, billed per token on the same key.
+The model is Gemini 3.8 Flash (`.gemini/settings.json`), billed per token on the key: a task is a
+few cents, a few seconds a turn. Gemma, free on the same API, is capped at 16k input tokens a
+minute, less than one turn of this agent, so it stalls on retries; `/model` in the CLI switches
+models for a session.
 
 If something does not come up: port 9333 on your machine must be free, since the MCP is reachable
 only as `127.0.0.1:9333`; on Linux your user must be in the `docker` group; on Windows, Docker
 Desktop needs WSL 2. `docker compose logs world` shows the world's three services starting.
+
+## Trace it in Google Cloud
+
+With a project in `.env` (`GOOGLE_CLOUD_PROJECT=`), the agent container exports every session to
+that project: the prompt, each model request and each tool call as events in Cloud Logging (log
+`gemini_cli`), the same as spans in Cloud Trace, token counts in Cloud Monitoring. It authenticates
+with your Application Default Credentials, mounted read-only from gcloud's folder:
+
+```sh
+gcloud auth application-default login
+gcloud services enable cloudtrace.googleapis.com logging.googleapis.com monitoring.googleapis.com --project <project>
+```
+
+Without a project in `.env` nothing leaves the machine.
 
 ## Run it with a CLI on this machine
 

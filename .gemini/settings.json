@@ -6,6 +6,6 @@
     }
   },
   "model": {
-    "name": "gemma-4-31b-it"
+    "name": "gemini-3.8-flash"
   }
 }
