@@ -9,6 +9,8 @@
 # folder's .gemini/settings.json says, and the same address a CLI on the host uses through the mapped port.
 # Sessions and the CLI's own state persist in the gemini-home volume; the folder itself is yours, bind-mounted,
 # so what you change in the brief or the wiki is what the next run reads.
+# The project's name is fixed, so the volumes keep their names whatever the clone's folder is called.
+name: linkedin-agent
 services:
   world:
     image: ghcr.io/lowgular/linkedin-world:0.3.2
@@ -66,5 +68,32 @@ services:
     volumes:
       - ./telemetry/collector.yaml:/etc/otelcol/collector.yaml:ro
       - ${GCLOUD_CONFIG_DIR:-$HOME/.config/gcloud}:/gcloud:ro
+  eval:
+    # The agent scored on lowgular/linkedin-po by Harbor: `docker compose run --rm eval -i profile-followers`
+    # (eval/linkedin_eval/run.py says the options). Harbor starts each task's container on this machine's
+    # Docker, through the socket; the jobs volume is mounted where Docker itself keeps it, so the trials'
+    # log folders resolve to the same place for Harbor here and for Docker. Keys come from .env: GEMINI_API_KEY
+    # for the agent, ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN for the grader's extractor.
+    build: ./eval
+    image: ghcr.io/lowgular/linkedin-eval:0.1.0
+    profiles: ["eval"]
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - .:/app:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - jobs:/var/lib/docker/volumes/linkedin-agent-jobs/_data
+      - harbor-cache:/root/.cache
+  eval-results:
+    # The latest runs and their scores: `docker compose run --rm eval-results` (a number for more than three).
+    image: ghcr.io/lowgular/linkedin-eval:0.1.0
+    profiles: ["eval"]
+    entrypoint: ["python", "-m", "linkedin_eval.results"]
+    volumes:
+      - jobs:/var/lib/docker/volumes/linkedin-agent-jobs/_data:ro
 volumes:
   gemini-home:
+  jobs:
+    name: linkedin-agent-jobs
+  harbor-cache:

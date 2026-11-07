@@ -16,6 +16,8 @@ hooks/                  Codex's stop hook: the response contract, when a schema 
 world/                  the world: pages, the loop, the image, how it is built (world/README.md)
 compose.yaml            the agent and the world on any machine with Docker
 Dockerfile              the agent image: Node and Gemini CLI, this folder mounted at /app
+eval/                   the eval image: Harbor, the harnesses that upload this folder, the runner
+telemetry/              the OpenTelemetry collector that ships traces to Google Cloud
 ```
 
 ## Run it with Docker, nothing else
@@ -85,19 +87,20 @@ configure. Gemini CLI reads the brief through `GEMINI.md`, the others through `A
 
 ## Score it
 
-The dataset `lowgular/linkedin-po` on Harbor Hub holds thirteen asks against this world, each
-graded fact by fact; its source and the runners live in the `marek` repository
-(`datasets/linkedin-po`, `evals/linkedin-po`). From there, with this repository checked out beside
-it:
+The dataset `lowgular/linkedin-po` on Harbor Hub holds thirteen asks against this world, each graded
+fact by fact. Harbor runs in a container too, starting each task's container on your Docker:
 
 ```sh
-cd ../marek/evals/linkedin-po
-./run.sh -h gemini-cli -v 0.2.1 -i lowgular/profile-followers    # one task
-./run.sh -h gemini-cli -v 0.2.1                                   # all thirteen
+docker compose run --rm eval -i profile-followers    # one task, Gemini CLI on Gemini 3.8 Flash
+docker compose run --rm eval                         # all thirteen
+docker compose run --rm eval-results                 # the latest runs and their scores
 ```
 
-`AGENT_DIR` names this folder when it is elsewhere. An `eval` service in `compose.yaml`, so the
-scoring runs in Docker too, is the next step.
+`-m flash-lite` picks a cheaper model, `-h claude-code -m haiku` another CLI, `-v 0.2.1` a dataset
+version (`eval/linkedin_eval/run.py`). The grader in every task reads the agent's answer with Claude
+Haiku, so `.env` needs `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` besides the Gemini key. The
+trials' files stay in the `linkedin-agent-jobs` volume, which the eval container mounts where Docker
+keeps it, so the paths Harbor hands to Docker mean the same folder on macOS, Windows and Linux.
 
 ## Images
 
@@ -106,5 +109,6 @@ Two images, both under `ghcr.io/lowgular`, both built for linux/amd64 and linux/
 - `linkedin-world:<version>`, the world (`world/image.sh --push`; the version is in `world/world.toml`),
   on the runtime image of `browser-use-faker`, the fake and the dev-browser service, which lives in
   `marek`;
-- `linkedin-agent:<version>`, Gemini CLI (`docker compose build agent`); compose builds it locally
-  when it is not pulled.
+- `linkedin-agent:<version>`, Gemini CLI (`docker compose build agent`), and `linkedin-eval:<version>`,
+  Harbor with this folder's harnesses (`docker compose build eval`); compose builds them locally
+  when they are not pulled.
