@@ -1,116 +1,147 @@
 # linkedin-agent
 
-A browser agent for LinkedIn, and the world it is built against. The agent is a folder a coding
-CLI starts in: Gemini CLI, Claude Code, Codex or OpenCode read the brief (`AGENTS.md`, with
-`GEMINI.md` and `CLAUDE.md` pointing at it), the wiki of pages and procedures under `pages/`, and
-reach the browser through one MCP server, dev-browser. The world (`world/`) is a recorded, authored
-LinkedIn served as a fake behind the real dev-browser, in a Docker image, so the agent is developed
-and scored without touching a live account. Nothing in the world is a real person.
+A browser agent for LinkedIn, built the way an agent should be built: against a world you can replay,
+scored fact by fact, traced turn by turn. The agent is a folder that a coding CLI starts in. Gemini CLI
+reads the brief in `AGENTS.md` and the wiki under `pages/`, and drives a browser through one MCP server,
+dev-browser. The browser does not open the real LinkedIn: it opens `world/`, a recorded and authored
+LinkedIn served as a fake, in a Docker container. Nothing in it is a real person, and nothing the agent
+clicks reaches a real account.
 
-```
-AGENTS.md               the brief; GEMINI.md and CLAUDE.md are links to it
-pages/                  the wiki: one page document per LinkedIn page, the procedures it offers, their input and output schemas
-memories/               what the agent knows about the browser tools
-.gemini/ .claude/ .codex/   each CLI's project settings: the dev-browser MCP, the model, the permissions
-hooks/                  Codex's stop hook: the response contract, when a schema is asked for
-world/                  the world: pages, the loop, the image, how it is built (world/README.md)
-compose.yaml            the agent and the world on any machine with Docker
-Dockerfile              the agent image: Node and Gemini CLI, this folder mounted at /app
-eval/                   the eval image: Harbor, the harnesses that upload this folder, the runner
-telemetry/              the OpenTelemetry collector that ships traces to Google Cloud
-```
+Everything runs in Docker. You need nothing else on your machine: no Node, no Python, no bash.
 
-## Run it with Docker, nothing else
+## Before you start
 
-Docker Desktop (or Docker Engine on Linux) is the only install. The world and the CLI run in
-containers; this folder is mounted into the agent's, so what you edit here is what the agent reads.
+1. **Docker.** [Docker Desktop](https://www.docker.com/products/docker-desktop/) on macOS or Windows,
+   Docker Engine on Linux. On Windows, Docker Desktop needs WSL 2, which its installer offers to set up.
+   On Linux, your user must be in the `docker` group (`sudo usermod -aG docker $USER`, then log in
+   again).
+2. **A Gemini API key.** Get one at https://aistudio.google.com/apikey. The agent runs on Gemini 3.8
+   Flash and is billed per token: one question costs a few cents.
+3. **Time for the first build.** The first run downloads the browser image, about 1.3 GB. Do it before
+   the workshop, not on the venue's network.
+
+## Set up
+
+The same commands work in a macOS or Linux terminal and in PowerShell, including the terminal inside
+VS Code or IntelliJ.
 
 ```sh
-git clone https://github.com/Lowgular/linkedin-agent && cd linkedin-agent
-cp .env.example .env               # put your Gemini API key in it: https://aistudio.google.com/apikey
-docker compose run --rm agent      # Gemini CLI in this folder; the world starts first
+git clone https://github.com/Lowgular/linkedin-agent
+cd linkedin-agent
+cp .env.example .env
 ```
 
-The same three lines in a macOS terminal, a Linux shell or a PowerShell tab in VS Code. The first
-run pulls the world image, about 1.3 GB, so do it before you need it. Then ask, as a person would:
-"Open my profile and tell me how many followers I have" (2,863 in this world), "Who reacted to my
-latest post?", "What did Inês Ferreira write in her About?". The agent must not change anything on
-the account; the fake logs every click:
+Open `.env` and put your key after `GEMINI_API_KEY=`. Then build everything once:
+
+```sh
+docker compose --profile eval build
+```
+
+This builds three images from this folder: the world, the agent's Gemini CLI, and the eval. It pulls one
+image from GitHub's registry, the browser runtime the world sits on.
+
+## Talk to the agent
+
+```sh
+docker compose run --rm agent
+```
+
+The world starts first, then Gemini CLI opens in this folder. Ask what a person would ask:
+
+- How many followers does my profile have?
+- Who reacted to my latest post?
+- What does Inês Ferreira write about herself?
+
+The agent reads its wiki, opens the pages, and answers. Your folder is mounted into the container, so when
+you change `AGENTS.md` or a page in `pages/`, the next session reads the change. `/quit` leaves the CLI.
+
+To see what the agent clicked:
 
 ```sh
 docker compose exec world cat /logs/agent/faker-clicks.jsonl
-docker compose down                # stop the world; `-v` also forgets the CLI's sessions
 ```
 
-The model is Gemini 3.8 Flash (`.gemini/settings.json`), billed per token on the key: a task is a
-few cents, a few seconds a turn. Gemma, free on the same API, is capped at 16k input tokens a
-minute, less than one turn of this agent, so it stalls on retries; `/model` in the CLI switches
-models for a session.
-
-If something does not come up: port 9333 on your machine must be free, since the MCP is reachable
-only as `127.0.0.1:9333`; on Linux your user must be in the `docker` group; on Windows, Docker
-Desktop needs WSL 2. `docker compose logs world` shows the world's three services starting.
-
-## Trace it in Google Cloud
-
-With a project in `.env` (`GOOGLE_CLOUD_PROJECT=`) and `COMPOSE_PROFILES=trace`, compose starts an
-OpenTelemetry collector beside the world (`telemetry/collector.yaml`). The agent sends its telemetry
-there and the collector ships it to that project: each turn as a trace in Cloud Trace (the tool
-calls as spans under it), the events in Cloud Logging (log `gemini_cli`, each entry linked to its
-trace), token and tool counts in Cloud Monitoring. It authenticates with your Application Default
-Credentials, mounted read-only from gcloud's folder:
-
-```sh
-gcloud auth application-default login
-gcloud services enable cloudtrace.googleapis.com logging.googleapis.com monitoring.googleapis.com --project <project>
-```
-
-Then Trace Explorer, `https://console.cloud.google.com/traces/explorer?project=<project>`, lists one trace per
-conversation: the collector makes the session's id the trace id (the CLI itself starts a trace
-per turn), so a run is one waterfall, each turn a root (`llm_call`, then `schedule_tool_calls` with
-its `tool_call`s), and a session id from the CLI, dashes removed, opens it directly. Without a project and
-the profile nothing leaves the machine. The CLI's own direct export to Google Cloud wrote the logs
-but never the spans, hence the collector.
-
-## Run it with a CLI on this machine
-
-Any CLI that speaks MCP works against the world alone:
-
-```sh
-docker compose up -d world         # the dev-browser MCP at http://127.0.0.1:9333/mcp
-gemini                             # in this folder; or claude, codex, opencode
-```
-
-Each CLI's project settings in this folder already name the server, so there is nothing to
-configure. Gemini CLI reads the brief through `GEMINI.md`, the others through `AGENTS.md` or
-`CLAUDE.md`.
+When you are done, `docker compose down` stops the world.
 
 ## Score it
 
-The dataset `lowgular/linkedin-po` on Harbor Hub holds thirteen asks against this world, each graded
-fact by fact. Harbor runs in a container too, starting each task's container on your Docker:
+The dataset `lowgular/linkedin-po` on Harbor Hub holds thirteen questions against this world, each with
+the facts a correct answer must contain. Harbor asks the agent each question in a fresh copy of the world,
+then a grader reads the answer and compares it fact by fact. A task scores between 0 and 1.
 
 ```sh
-docker compose run --rm eval -i profile-followers    # one task, Gemini CLI on Gemini 3.8 Flash
-docker compose run --rm eval                         # all thirteen
+docker compose run --rm eval -i profile-followers    # one task
+docker compose run --rm eval                         # all thirteen, a few minutes, under a złoty or two
 docker compose run --rm eval-results                 # the latest runs and their scores
 ```
 
-`-m flash-lite` picks a cheaper model, `-h claude-code -m haiku` another CLI, `-v 0.2.1` a dataset
-version (`eval/linkedin_eval/run.py`). The grader in every task reads the agent's answer with an
-extractor: Claude Haiku by default, which needs `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` in
-`.env`; `-x gemini` uses Gemini Flash-Lite on the same `GEMINI_API_KEY` as the agent, and a `.env`
-with only the Gemini key gets Gemini without the flag. The
-trials' files stay in the `linkedin-agent-jobs` volume, which the eval container mounts where Docker
-keeps it, so the paths Harbor hands to Docker mean the same folder on macOS, Windows and Linux.
+Options:
 
-## Images
+| Flag | Does |
+|---|---|
+| `-i <task>` | runs one task; repeat it for several |
+| `-m flash-lite` | runs the agent on Gemini 3.5 Flash-Lite, cheaper and weaker |
+| `-x gemini` | grades with Gemini instead of Claude Haiku |
+| `-v <version>` | runs a specific version of the dataset |
 
-Two images, both under `ghcr.io/lowgular`, both built for linux/amd64 and linux/arm64:
+The grader reads each answer with a small model that only extracts what the answer says; code does the
+comparison. It is Claude Haiku when `.env` has a Claude key (`ANTHROPIC_API_KEY` or
+`CLAUDE_CODE_OAUTH_TOKEN`), and Gemini Flash-Lite on your Gemini key otherwise. With only a Gemini key you
+need no flag.
 
-- `linkedin-world:<version>`, the world (`world/image.sh --push`; the version is in `world/world.toml`),
-  on the runtime image of `browser-use-faker`, the fake and the dev-browser service, which lives in
-  `marek`;
-- `linkedin-agent:<version>`, Gemini CLI (`docker compose build agent`), and `linkedin-eval:<version>`,
-  Harbor with this folder's harnesses (`docker compose build eval`); compose builds them locally
-  when they are not pulled.
+The trial files, including every answer and every grade, stay in the Docker volume `linkedin-agent-jobs`.
+
+## Trace it in Google Cloud
+
+Optional, for whoever wants to see the agent's runs as waterfalls. Put a Google Cloud project in `.env`
+and turn on the trace profile:
+
+```
+GOOGLE_CLOUD_PROJECT=<your project>
+COMPOSE_PROFILES=trace
+```
+
+Then log in once and enable three APIs on that project:
+
+```sh
+gcloud auth application-default login
+gcloud services enable cloudtrace.googleapis.com logging.googleapis.com monitoring.googleapis.com --project <your project>
+```
+
+`docker compose up -d` now also starts an OpenTelemetry collector, which ships every session to your
+project. Each conversation is one trace in Cloud Trace: every model call and every tool call, in order,
+with its duration. Open https://console.cloud.google.com/traces/explorer?project=<your project>. A
+session's id from the CLI, without its dashes, is its trace id. Without a project in `.env`, nothing
+leaves your machine.
+
+## If something does not work
+
+- **The agent cannot reach the browser.** Port 9333 on your machine must be free: the MCP server answers
+  only on `127.0.0.1:9333`. `docker compose logs world` shows the world's three services starting.
+- **The first build fails pulling `browser-use-faker`.** The runtime image is not reachable from your
+  network or not public yet. Tell the presenter.
+- **The eval says the dataset is not on Harbor Hub.** The version you asked for is not published, or not
+  public.
+- **Every task scores 0 but the answers look right.** The grader has no key: check `.env`.
+- **Linux: permission denied on the Docker socket.** Your user is not in the `docker` group yet.
+
+## What is in this folder
+
+```
+AGENTS.md               the brief; Gemini CLI reads it through .gemini/settings.json, Codex by name,
+                        Claude Code through the CLAUDE.md link (GEMINI.md is a link too, for older setups)
+pages/                  the wiki: one document per LinkedIn page, the procedures it offers, their schemas
+memories/               what the agent knows about the browser tools
+.gemini/                Gemini CLI's settings for this folder: the dev-browser MCP server and the model
+.claude/ .codex/        the same for Claude Code and Codex
+world/                  the world: its pages, the loop it is authored for, its image (world/README.md)
+eval/                   the eval image: Harbor, the harness that uploads this folder, the runner
+telemetry/              the OpenTelemetry collector for Cloud Trace
+compose.yaml            the world, the agent, the eval, the collector
+Dockerfile              the agent image: Node and Gemini CLI
+.env.example            the keys, copied to .env, which git ignores
+```
+
+Any CLI installed on your own machine works against the world too: `docker compose up -d world` starts it
+alone, and `gemini`, `claude`, `codex` or `opencode` in this folder find the MCP server through their
+settings here.

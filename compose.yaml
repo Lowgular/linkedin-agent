@@ -13,7 +13,14 @@
 name: linkedin-agent
 services:
   world:
+    # Built here from world/ on the runtime image (the fake, a Chromium and the dev-browser MCP), which is
+    # pulled from GHCR; the tag is the one the dataset's tasks are FROM, so Harbor finds it locally too.
     image: ghcr.io/lowgular/linkedin-world:0.3.2
+    build:
+      context: ./world
+      args:
+        RUNTIME: ghcr.io/lowgular/browser-use-faker:0.2.2
+    pull_policy: build
     ports:
       - "127.0.0.1:9333:9333"
     healthcheck:
