@@ -14,8 +14,9 @@ world.json      the loop the world is authored for: four invented people, and fo
 templates/      what compose.mjs composes from, harvested once from the recording and committed
 compose.mjs     rewrites the world from world.json: counts, dialogs and facepiles on every page a post is seen on, a profile per person
 walk.mjs        walks the loop against a served world and says what holds
-run.sh          runs the image here: the dev-browser MCP at http://127.0.0.1:9333/mcp, for an agent on this machine
-image.sh        builds the image, --push pushes it
+Dockerfile      the image: the runtime world.toml names, plus world/ at /opt/world
+image.sh        builds the image, --push builds it for both architectures and pushes it
+run.sh          runs the image here without compose: the dev-browser MCP at http://127.0.0.1:9333/mcp
 ```
 
 The recording, the scrub that anonymizes it and the map from the people recorded to the people
@@ -25,9 +26,9 @@ import writes into this folder. What is here is the result, and the tools that c
 ## Running it
 
 ```sh
-./run.sh            # pulls the image if needed, starts it, waits for the MCP
-./run.sh clicks     # what the agent clicked so far, by accessible name
-./run.sh stop
+docker compose up -d world    # from the repository root; or, here, ./run.sh
+./run.sh clicks               # what the agent clicked so far, by accessible name
+docker compose down
 ```
 
 The container starts three things: the fake serving `world/` over HTTPS under LinkedIn's own host
@@ -36,7 +37,8 @@ service attached to that Chromium. An agent opens `https://www.linkedin.com/…`
 sees the recorded page, with the accessibility tree the live page had; a click the recording holds
 moves to the recorded next state, a click it does not hold does nothing and is logged, a page that
 was never walked is answered "Not recorded". The MCP inside binds loopback and checks the Host
-header, so `run.sh` maps the host port onto a forwarder it starts in the container.
+header; the entrypoint relays it to the container's other interfaces, so the host maps 9333 onto
+9333 and nothing else: another host port fails the Host check.
 
 ## The loop
 
@@ -67,8 +69,8 @@ docker exec linkedin-world node /tmp/walk.mjs --cdp http://127.0.0.1:9222 --base
 ## The image
 
 ```sh
-./image.sh            # ghcr.io/lowgular/linkedin-world:<version>, for Docker on this machine
-./image.sh --push     # and pushed, so the published dataset runs anywhere
+./image.sh            # ghcr.io/lowgular/linkedin-world:<version>, for this machine's architecture
+./image.sh --push     # for linux/amd64 and linux/arm64, pushed under one tag, so it runs anywhere
 ```
 
 When `world/` changes: bump the version in `world.toml`, `./image.sh --push`, then point the
@@ -79,6 +81,9 @@ login once the package is public on GHCR; pushing needs a GitHub token with `wri
 
 ## Versions
 
+- 0.3.2: the same pages on runtime `browser-use-faker` 0.2.2, whose entrypoint relays the MCP to the
+  container's interfaces, so `-p 127.0.0.1:9333:9333` is all a host needs; built for linux/amd64 and
+  linux/arm64. Dockerfile in this folder.
 - 0.3.1: the same pages with LinkedIn's member and company identifiers scrubbed: profile URNs,
   numeric member ids and ad pixel company ids replaced by invented ones, slugs replaced where they
   were glued into element ids. No fact changed. Runtime `browser-use-faker` 0.2.1.

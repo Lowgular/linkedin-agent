@@ -1,0 +1,40 @@
+# compose.yaml — the agent and its world, for any machine with Docker: nothing installed on the host.
+#
+#   cp .env.example .env            then put your Gemini API key in it (Gemma 4 on the free tier costs nothing)
+#   docker compose run --rm agent   Gemini CLI in this folder, the world started first; ask it about your profile
+#   docker compose up -d world      the world alone, for a CLI installed on this machine (http://127.0.0.1:9333/mcp)
+#   docker compose down             stop everything
+#
+# The agent container shares the world's network, so inside it the MCP is at 127.0.0.1:9333, exactly as the
+# folder's .gemini/settings.json says, and the same address a CLI on the host uses through the mapped port.
+# Sessions and the CLI's own state persist in the gemini-home volume; the folder itself is yours, bind-mounted,
+# so what you change in the brief or the wiki is what the next run reads.
+services:
+  world:
+    image: ghcr.io/lowgular/linkedin-world:0.3.2
+    ports:
+      - "127.0.0.1:9333:9333"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:9333/health"]
+      interval: 2s
+      timeout: 3s
+      retries: 45
+      start_period: 5s
+  agent:
+    build: .
+    image: ghcr.io/lowgular/linkedin-agent:0.1.0
+    network_mode: "service:world"
+    depends_on:
+      world:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - .:/app
+      - gemini-home:/root/.gemini
+    working_dir: /app
+    stdin_open: true
+    tty: true
+volumes:
+  gemini-home:

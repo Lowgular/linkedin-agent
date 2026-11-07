@@ -1,7 +1,8 @@
-# The world image: the fake's runtime (browser-use-faker's image, `runtime`) with world/ at /opt/world,
-# built by image.sh, tagged with `version` and never moved. Bump the version when world/ changes; the
-# dataset (datasets/linkedin-po in github.com/Lowgular/marek) names the tag in its Dockerfile.
+# The world image: the runtime image (`runtime`: browser-use-faker's — the fake, a Chromium, the dev-browser
+# MCP service, all started by its entrypoint) with world/ at /opt/world, built by image.sh from the
+# Dockerfile here, tagged with `version` and never moved. Bump the version when world/ changes; the dataset
+# (datasets/linkedin-po in github.com/Lowgular/marek) names the tag in its Dockerfile, compose.yaml names it too.
 [world]
 image = "ghcr.io/lowgular/linkedin-world"
-version = "0.3.1"
-runtime = "ghcr.io/lowgular/browser-use-faker:0.2.1"
+version = "0.3.2"
+runtime = "ghcr.io/lowgular/browser-use-faker:0.2.2"

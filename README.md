@@ -5,7 +5,7 @@ CLI starts in: Gemini CLI, Claude Code, Codex or OpenCode read the brief (`AGENT
 `GEMINI.md` and `CLAUDE.md` pointing at it), the wiki of pages and procedures under `pages/`, and
 reach the browser through one MCP server, dev-browser. The world (`world/`) is a recorded, authored
 LinkedIn served as a fake behind the real dev-browser, in a Docker image, so the agent is developed
-and scored without touching a live account.
+and scored without touching a live account. Nothing in the world is a real person.
 
 ```
 AGENTS.md               the brief; GEMINI.md and CLAUDE.md are links to it
@@ -13,19 +13,53 @@ pages/                  the wiki: one page document per LinkedIn page, the proce
 memories/               what the agent knows about the browser tools
 .gemini/ .claude/ .codex/   each CLI's project settings: the dev-browser MCP, the model, the permissions
 hooks/                  Codex's stop hook: the response contract, when a schema is asked for
-world/                  the world: pages, the loop, the image, how to run it (world/README.md)
+world/                  the world: pages, the loop, the image, how it is built (world/README.md)
+compose.yaml            the agent and the world on any machine with Docker
+Dockerfile              the agent image: Node and Gemini CLI, this folder mounted at /app
 ```
 
-## Run it
+## Run it with Docker, nothing else
+
+Docker Desktop (or Docker Engine on Linux) is the only install. The world and the CLI run in
+containers; this folder is mounted into the agent's, so what you edit here is what the agent reads.
 
 ```sh
-world/run.sh                       # the world in Docker, the MCP at http://127.0.0.1:9333/mcp
+git clone https://github.com/Lowgular/linkedin-agent && cd linkedin-agent
+cp .env.example .env               # put your Gemini API key in it: https://aistudio.google.com/apikey
+docker compose run --rm agent      # Gemini CLI in this folder; the world starts first
+```
+
+The same three lines in a macOS terminal, a Linux shell or a PowerShell tab in VS Code. The first
+run pulls the world image, about 1.3 GB, so do it before you need it. Then ask, as a person would:
+"Open my profile and tell me how many followers I have" (2,863 in this world), "Who reacted to my
+latest post?", "What did Inês Ferreira write in her About?". The agent must not change anything on
+the account; the fake logs every click:
+
+```sh
+docker compose exec world cat /logs/agent/faker-clicks.jsonl
+docker compose down                # stop the world; `-v` also forgets the CLI's sessions
+```
+
+The model is Gemma 4 31B (`.gemini/settings.json`), free of charge on the Gemini API with a key
+that needs no billing; a few turns take a minute each. `/model` in the CLI switches to a Gemini
+model for speed, billed per token on the same key.
+
+If something does not come up: port 9333 on your machine must be free, since the MCP is reachable
+only as `127.0.0.1:9333`; on Linux your user must be in the `docker` group; on Windows, Docker
+Desktop needs WSL 2. `docker compose logs world` shows the world's three services starting.
+
+## Run it with a CLI on this machine
+
+Any CLI that speaks MCP works against the world alone:
+
+```sh
+docker compose up -d world         # the dev-browser MCP at http://127.0.0.1:9333/mcp
 gemini                             # in this folder; or claude, codex, opencode
 ```
 
-Then ask, as a person would: "How many followers does my profile have?" (2,863 in this world),
-"Who reacted to my latest post?", "What did Inês Ferreira write in her About?". The agent must
-not change anything on the account; `world/run.sh clicks` shows every click it made.
+Each CLI's project settings in this folder already name the server, so there is nothing to
+configure. Gemini CLI reads the brief through `GEMINI.md`, the others through `AGENTS.md` or
+`CLAUDE.md`.
 
 ## Score it
 
@@ -40,4 +74,15 @@ cd ../marek/evals/linkedin-po
 ./run.sh -h gemini-cli -v 0.2.1                                   # all thirteen
 ```
 
-`AGENT_DIR` names this folder when it is elsewhere.
+`AGENT_DIR` names this folder when it is elsewhere. An `eval` service in `compose.yaml`, so the
+scoring runs in Docker too, is the next step.
+
+## Images
+
+Two images, both under `ghcr.io/lowgular`, both built for linux/amd64 and linux/arm64:
+
+- `linkedin-world:<version>`, the world (`world/image.sh --push`; the version is in `world/world.toml`),
+  on the runtime image of `browser-use-faker`, the fake and the dev-browser service, which lives in
+  `marek`;
+- `linkedin-agent:<version>`, Gemini CLI (`docker compose build agent`); compose builds it locally
+  when it is not pulled.

@@ -1,0 +1,2 @@
+# Scripts and settings run inside Linux containers and on every host; a Windows checkout with CRLF would break them.
+* text=auto eol=lf

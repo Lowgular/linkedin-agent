@@ -4,5 +4,8 @@
       "url": "http://127.0.0.1:9333/mcp",
       "type": "http"
     }
+  },
+  "model": {
+    "name": "gemma-4-31b-it"
   }
 }
