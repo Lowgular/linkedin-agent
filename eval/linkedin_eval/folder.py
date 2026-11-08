@@ -9,7 +9,7 @@ settings — so these subclasses add one step: once the CLI is installed, the fo
 `agent_dir` names is uploaded to /app, minus its secrets, and the CLI starts inside it. Its
 tools are the trial's own services (eval/compose.yaml), where the folder's settings find them.
 
-    harbor run -d lowgular/linkedin-po@0.2.3 -a linkedin_eval.folder:gemini_cli \
+    harbor run -d lowgular/browser-use-linkedin@0.2.3 -a linkedin_eval.folder:gemini_cli \
         --ak agent_dir=/app/agent --extra-docker-compose /app/eval/compose.yaml -m gemini/gemini-3.8-flash
 
 Each class also goes by Harbor's agent name with underscores — linkedin_eval.folder:claude_code —

@@ -1,4 +1,4 @@
-"""The eval image's entrypoint: score this agent folder on the lowgular/linkedin-po dataset with Harbor.
+"""The eval image's entrypoint: score this agent folder on the lowgular/browser-use-linkedin dataset with Harbor.
 
     docker compose run --rm eval                          all thirteen tasks, Gemini CLI on Gemini 3.8 Flash
     docker compose run --rm eval -i profile-followers     one task (-i again for more)
@@ -27,7 +27,7 @@ ALIASES = {
     "sonnet": "claude-sonnet-5-5",
     "luna": "gpt-6-luna",
 }
-DATASET = "lowgular/linkedin-po"
+DATASET = "lowgular/browser-use-linkedin"
 JOBS_VOLUME = os.environ.get("JOBS_VOLUME", "linkedin-agent-jobs")
 JOBS_DIR = Path(os.environ.get("JOBS_DIR", f"/var/lib/docker/volumes/{JOBS_VOLUME}/_data"))
 AGENT_DIR = os.environ.get("AGENT_DIR", "/app/agent")

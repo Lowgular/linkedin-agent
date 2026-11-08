@@ -85,7 +85,7 @@ the local browser.
 
 ## Score it
 
-The dataset `lowgular/linkedin-po` on Harbor Hub holds thirteen questions against this world, each with
+The dataset `lowgular/browser-use-linkedin` on Harbor Hub holds thirteen questions against this world, each with
 the facts a correct answer must contain. Harbor asks the agent each question in a fresh copy of the world,
 then a grader reads the answer and compares it fact by fact. A task scores between 0 and 1.
 
@@ -161,7 +161,7 @@ agent/                  the agent, and nothing else: the folder a CLI runs in, m
 mcp/browser-mcp/         the agent's browser tools, built and served on their own: an MCP server over any
                         browser's CDP, restarted on every edit in compose (mcp/browser-mcp/README.md)
 world/                  the world: its pages, the loop it is authored for, its deploy to Firebase (world/README.md)
-dataset/                the eval's questions and facts, the source of lowgular/linkedin-po (dataset/README.md)
+dataset/                the eval's questions and facts, the source of lowgular/browser-use-linkedin (dataset/README.md)
 eval/                   the eval: Harbor, the harness that uploads agent/, the runner, and compose.yaml, each
                         trial laid out as the root compose.yaml lays out a session
 telemetry/              the OpenTelemetry collector for Cloud Trace

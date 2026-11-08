@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dataset/publish.sh — publish the build in dist/ to Harbor Hub, private, tagged
+# dataset/publish.sh — publish the build in dist/ to Harbor Hub, private (--public: public), tagged
 # with the version its dataset.toml carries. Fails when dist/ holds no build, and when a case
 # under tasks/ is not in it — a skipped case, or a build older than the case. Publishes are
 # permanent and content-addressed: a changed task is a new revision, tags move, nothing is
@@ -27,4 +27,5 @@ fi
 
 count=$(find "$dist" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
 echo "▸ publishing $name $version: $count tasks from ${dist#"$here"/}" >&2
-harbor publish "$dist" --tag "$version" --private
+visibility="--private"; [[ "${1:-}" == "--public" ]] && visibility="--public"
+harbor publish "$dist" --tag "$version" "$visibility"

@@ -4,7 +4,7 @@
 # compose.yaml runs it as the `eval` service; nothing but Docker is needed on the host.
 FROM python:3.13-slim
 LABEL org.opencontainers.image.source="https://github.com/Lowgular/linkedin-agent" \
-      org.opencontainers.image.description="Harbor and the linkedin-agent harnesses, scoring the agent on lowgular/linkedin-po"
+      org.opencontainers.image.description="Harbor and the linkedin-agent harnesses, scoring the agent on lowgular/browser-use-linkedin"
 COPY --from=docker:28.5.1-cli /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=docker:28.5.1-cli /usr/local/libexec/docker/cli-plugins/ /usr/local/libexec/docker/cli-plugins/
 COPY pyproject.toml /opt/eval/

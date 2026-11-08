@@ -1,8 +1,9 @@
-# linkedin-po dataset
+# browser-use-linkedin dataset
 
 Thirteen LinkedIn asks in plain language — open my profile, go to my posts, open this post — played
 against one recorded, authored LinkedIn world, no live LinkedIn, and scored 0 to 1 fact by fact. The
-source lives here, in `dataset/` of github.com/Lowgular/linkedin-agent; the releases live on Harbor Hub as `lowgular/linkedin-po`, one immutable revision
+source lives here, in `dataset/` of github.com/Lowgular/linkedin-agent; the releases live on Harbor Hub as `lowgular/browser-use-linkedin` (public, from 0.2.3; the earlier
+versions were `lowgular/linkedin-po`, private), one immutable revision
 per version, tagged with the version from `dataset.toml`. The world is not part of the dataset: it is
 `world/` beside this folder, published as a static site (`world/deploy.sh`) that every task's browser
 fetches its pages from; its README says how it is made and published.
@@ -64,7 +65,7 @@ and `shared/environment/Dockerfile` is pointed at it.
 ```sh
 ./build.sh              # dist/, with a manifest whose digests match the assembled tasks
 ./check.sh --offline    # the comparison probes; without --offline, the extraction probes too
-./publish.sh            # what dist/ holds, to Harbor Hub as lowgular/linkedin-po@<version>, private
+./publish.sh            # what dist/ holds, to Harbor Hub as lowgular/browser-use-linkedin@<version>, private (--public: public)
 ```
 
 The eval in this repository's compose runs the build in `dist/` when there is one, the Hub's otherwise
@@ -97,7 +98,10 @@ The agent is told nothing about where it is: the instruction is the question. Th
 browser and nothing more — linuxserver.io's Chromium, its CDP on 9222 — and the agent brings its own tools for it:
 this repository's eval lays every trial out as its compose does (`eval/compose.yaml`: the same browser, `browser-mcp` as a service of its own, `main` the agent's image), attached to that CDP, and the CLI finds
 it through the folder's settings, so the agent has a browser tool the way it has file tools. The browser is signed in; `https://www.linkedin.com/in/me/`
-opens the member's own profile, as on LinkedIn. What the agent may and may not do with it is the
+opens the member's own profile, as on LinkedIn. The task image declares the world's address map
+(`BROWSER_MCP_MAP_HOSTS=www.linkedin.com=<the world's site>`), and browser tools must honour it: browser-mcp
+does. Other browser tools, given the task's browser over CDP, would open the real LinkedIn unless they map
+`www.linkedin.com` to the world's site the same way. What the agent may and may not do with it is the
 agent's own brief. The image holds the world, no agent and no CLI; Harbor installs the harness at trial
 start. What the agent then sees, and how a click moves through the recording, is the world's
 README: `../world/README.md`.
