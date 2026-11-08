@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { taggedUrl } from './browser.mjs';
+import { settled } from './hosts.mjs';
 
 const identifier = z.string().regex(/^[a-f0-9]{16}$/);
 const RUN = { run: identifier.describe('Browser session ID from session_start; share this to resume a task.') };
@@ -38,6 +39,7 @@ export function createServer(state) {
     const address = taggedUrl(await state.resolve(url, run), run, state.session(run).tagUrls);
     state.captures.delete(tab);
     await page.goto(address, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    await settled(page);
     await state.hook('afterNavigation', { page, url: page.url() });
     await state.tag(run, page);
     return { run, tab, url: page.url(), title: await page.title() };

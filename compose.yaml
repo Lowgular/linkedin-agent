@@ -46,9 +46,13 @@ services:
       - path: .env
         required: false
     environment:
-      # browser-mcp, started by the image's entrypoint, attaches to dev-browser's CDP. The agent shares the
-      # browser's network, so that is loopback: Chromium accepts CDP only by IP or localhost, not by a name.
-      BROWSER_MCP_CDP: http://127.0.0.1:9222
+      # browser-mcp, started by the image's entrypoint, attaches to the browser's CDP: dev-browser's by default
+      # — the agent shares its network, so that is loopback, since Chromium accepts CDP only by IP or localhost,
+      # not by a name — or a session in Steel's cloud (BROWSER_CDP=steel and STEEL_API_KEY in .env). Either way
+      # LinkedIn's address is answered from the world's site in the browser's connection, so any browser sees
+      # the world; browser-mcp itself knows nothing of it.
+      BROWSER_MCP_CDP: ${BROWSER_CDP:-http://127.0.0.1:9222}
+      BROWSER_MCP_MAP_HOSTS: www.linkedin.com=${WORLD_URL:-https://linkedin-stub.web.app}
       # Tracing to Google Cloud, on when .env names a project (and COMPOSE_PROFILES=trace starts the collector):
       # the CLI sends its telemetry over OTLP to the collector service, which ships every model request and
       # tool call as a span to Cloud Trace, the events to Cloud Logging, token counts to Cloud Monitoring.

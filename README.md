@@ -73,6 +73,26 @@ To see the world yourself, while the browser runs (`docker compose up -d dev-bro
 
 When you are done, `docker compose down` stops the browser.
 
+### Another browser: Steel's cloud
+
+The agent's tools attach to any browser over CDP, so the same agent runs on a browser in
+[Steel](https://steel.dev)'s cloud too, where you watch its sessions live and replay them. With a Steel
+account (new ones come with free credit), add to `.env`:
+
+```
+BROWSER_CDP=steel
+STEEL_API_KEY=<your key>
+# STEEL_PROFILE=<a profile id>    optional: every session starts from that browser profile
+```
+
+`docker compose run --rm agent` then browses through Steel: browser-mcp opens a Steel session on the
+first browser step and writes the session's page in Steel's dashboard to its log (`docker compose exec
+agent cat /tmp/browser-mcp.log`); every session is listed there as well. The browser is Steel's, the world
+is still the world: compose tells browser-mcp to answer `www.linkedin.com` from the world's site
+(`BROWSER_MCP_MAP_HOSTS`), in the browser's connection, so the agent still opens `www.linkedin.com`. A session ends after 15 minutes (`STEEL_SESSION_TIMEOUT`, in ms) or when
+the agent exits, and costs Steel's per-minute price meanwhile. Remove the two lines to go back to
+dev-browser.
+
 ## Score it
 
 The dataset `lowgular/linkedin-po` on Harbor Hub holds thirteen questions against this world, each with

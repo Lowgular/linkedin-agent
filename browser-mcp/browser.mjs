@@ -2,6 +2,7 @@ import { chromium } from 'playwright-core';
 import { randomBytes } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { mapHosts, settled } from './hosts.mjs';
 
 const id = () => randomBytes(8).toString('hex');
 export function taggedUrl(value, run, enabled = true) {
@@ -14,8 +15,8 @@ export function taggedUrl(value, run, enabled = true) {
 }
 
 export class BrowserState {
-  constructor({ cdp = 'http://127.0.0.1:9222', stateFile, hooks = {} }) {
-    this.cdp = cdp; this.stateFile = stateFile; this.hooks = hooks;
+  constructor({ cdp = 'http://127.0.0.1:9222', stateFile, hooks = {}, steel = {}, hostMap = {} }) {
+    this.cdp = cdp; this.stateFile = stateFile; this.hooks = hooks; this.steel = steel; this.hostMap = hostMap; this.steelSession = null;
     this.sessions = {}; this.handles = new Map(); this.captures = new Map(); this.queues = new Map();
     this.saving = Promise.resolve(); this.connecting = null; this.connection = null;
   }
@@ -51,17 +52,40 @@ export class BrowserState {
   async browser() {
     if (this.connection?.isConnected()) return this.connection;
     if (!this.connecting) this.connecting = (async () => {
-      const targets = await fetch(`${this.cdp}/json`, { signal: AbortSignal.timeout(5000) }).then(r => r.json());
-      if (!targets.some(t => t.type === 'page')) {
-        const response = await fetch(`${this.cdp}/json/new?about:blank`, { method: 'PUT', signal: AbortSignal.timeout(5000) });
-        if (!response.ok) throw new Error('Could not create initial Chrome tab.');
+      // An http(s) address is Chrome's own: make sure it has a tab before attaching. A ws(s) address is a
+      // browser service's endpoint, with no /json to ask: a tab is opened once attached. `steel` is a session
+      // in Steel's cloud, created here, attached by its endpoint.
+      const endpoint = this.cdp === 'steel' ? await this.startSteel() : this.cdp;
+      const http = /^https?:/.test(endpoint);
+      if (http) {
+        const targets = await fetch(`${this.cdp}/json`, { signal: AbortSignal.timeout(5000) }).then(r => r.json());
+        if (!targets.some(t => t.type === 'page')) {
+          const response = await fetch(`${this.cdp}/json/new?about:blank`, { method: 'PUT', signal: AbortSignal.timeout(5000) });
+          if (!response.ok) throw new Error('Could not create initial Chrome tab.');
+        }
       }
-      const browser = await chromium.connectOverCDP(this.cdp, { timeout: 15000 });
+      const browser = await chromium.connectOverCDP(endpoint, { timeout: 15000 });
+      const context = browser.contexts()[0] ?? await browser.newContext();
+      if (Object.keys(this.hostMap).length) await mapHosts(context, this.hostMap);
+      await this.hook('onConnect', { browser, context, mapHosts });
+      if (!http && !context.pages().length) await context.newPage();
       this.connection = browser;
-      browser.on('disconnected', () => { this.connection = null; this.handles.clear(); this.captures.clear(); });
+      browser.on('disconnected', () => { this.connection = null; this.steelSession = null; this.handles.clear(); this.captures.clear(); });
       return browser;
     })().catch(error => { throw new Error(`Browser unavailable at ${this.cdp}: ${error.message}`); }).finally(() => { this.connecting = null; });
     return this.connecting;
+  }
+  // A session in Steel's cloud: one per connection, on the account's profile when one is named (read, never
+  // saved back), released when it times out or the service stops; watched at its page in Steel's dashboard.
+  async startSteel() {
+    const { key, timeout = 900000, profile } = this.steel;
+    if (!key) throw new Error('STEEL_API_KEY is not set.');
+    const response = await fetch('https://api.steel.dev/v1/sessions', { method: 'POST', headers: { 'steel-api-key': key, 'content-type': 'application/json' }, body: JSON.stringify({ timeout, ...(profile ? { profileId: profile } : {}) }), signal: AbortSignal.timeout(30000) });
+    if (!response.ok) throw new Error(`Steel refused a session: ${response.status} ${(await response.text()).slice(0, 200)}`);
+    const session = await response.json();
+    this.steelSession = session.id;
+    console.log(`Steel session ${session.id}: watch it at ${session.sessionViewerUrl ?? 'https://app.steel.dev'}`);
+    return session.websocketUrl ?? `wss://connect.steel.dev?apiKey=${encodeURIComponent(key)}&sessionId=${session.id}`;
   }
   async targetId(page) {
     const cdp = await page.context().newCDPSession(page);
@@ -115,6 +139,7 @@ export class BrowserState {
       await this.save();
       if (address !== 'about:blank') {
         await page.goto(address, { waitUntil: 'domcontentloaded', timeout: 45000 });
+        await settled(page);
         await this.hook('afterNavigation', { page, url: page.url() });
       }
       await this.tag(run, page);
@@ -188,5 +213,6 @@ export class BrowserState {
   async disconnect() {
     await this.saving;
     if (this.connection) await this.connection.close(); // Disconnect CDP; does not close external Chrome.
+    if (this.steelSession) await fetch(`https://api.steel.dev/v1/sessions/${this.steelSession}/release`, { method: 'POST', headers: { 'steel-api-key': this.steel.key }, signal: AbortSignal.timeout(10000) }).catch(() => {});
   }
 }

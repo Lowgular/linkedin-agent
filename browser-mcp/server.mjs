@@ -14,9 +14,9 @@ async function loadHook(file) {
   if (typeof hook !== 'function') throw new Error(`Hook ${file} has no default export function.`);
   return hook;
 }
-export async function serve({ port = 9333, cdp = 'http://127.0.0.1:9222', stateFile = path.join(root, '.runtime/state.json'), hooks = {} } = {}) {
-  const loaded = { beforeNavigation: await loadHook(hooks.beforeNavigation), afterAction: await loadHook(hooks.afterAction), afterNavigation: await loadHook(hooks.afterNavigation) };
-  const state = await new BrowserState({ cdp, stateFile, hooks: loaded }).init();
+export async function serve({ port = 9333, cdp = 'http://127.0.0.1:9222', stateFile = path.join(root, '.runtime/state.json'), hooks = {}, steel = {}, hostMap = {} } = {}) {
+  const loaded = { onConnect: await loadHook(hooks.onConnect), beforeNavigation: await loadHook(hooks.beforeNavigation), afterAction: await loadHook(hooks.afterAction), afterNavigation: await loadHook(hooks.afterNavigation) };
+  const state = await new BrowserState({ cdp, stateFile, hooks: loaded, steel, hostMap }).init();
   const server = httpServer(async (req, res) => {
     // Loopback only, with Host and Origin checks against browser-origin requests/DNS rebinding.
     const host = req.headers.host;
@@ -44,7 +44,9 @@ export async function serve({ port = 9333, cdp = 'http://127.0.0.1:9222', stateF
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   const env = process.env;
-  const service = await serve({ port: Number(env.BROWSER_MCP_PORT ?? 9333), cdp: env.BROWSER_MCP_CDP ?? 'http://127.0.0.1:9222', stateFile: env.BROWSER_MCP_STATE_FILE ?? path.join(root, '.runtime/state.json'), hooks: { beforeNavigation: env.BROWSER_MCP_HOOKS_BEFORE_NAVIGATION, afterAction: env.BROWSER_MCP_HOOKS_AFTER_ACTION, afterNavigation: env.BROWSER_MCP_HOOKS_AFTER_NAVIGATION } });
+  const service = await serve({ port: Number(env.BROWSER_MCP_PORT ?? 9333), cdp: env.BROWSER_MCP_CDP ?? 'http://127.0.0.1:9222', stateFile: env.BROWSER_MCP_STATE_FILE ?? path.join(root, '.runtime/state.json'), hooks: { onConnect: env.BROWSER_MCP_HOOKS_ON_CONNECT, beforeNavigation: env.BROWSER_MCP_HOOKS_BEFORE_NAVIGATION, afterAction: env.BROWSER_MCP_HOOKS_AFTER_ACTION, afterNavigation: env.BROWSER_MCP_HOOKS_AFTER_NAVIGATION },
+    steel: { key: env.STEEL_API_KEY, timeout: Number(env.STEEL_SESSION_TIMEOUT ?? 900000), profile: env.STEEL_PROFILE },
+    hostMap: Object.fromEntries((env.BROWSER_MCP_MAP_HOSTS ?? '').split(',').map(e => e.trim()).filter(Boolean).map(e => [e.slice(0, e.indexOf('=')), e.slice(e.indexOf('=') + 1)])) });
   console.log(`browser-mcp listening at http://127.0.0.1:${service.server.address().port}/mcp`);
   let stopping = false;
   const stop = async () => { if (stopping) return; stopping = true; await service.close(); process.exit(0); };
