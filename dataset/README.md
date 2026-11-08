@@ -94,8 +94,8 @@ are what its pages show.
 ## The environment
 
 The agent is told nothing about where it is: the instruction is the question. The environment is a
-browser and nothing more — `dev-browser`, its CDP on 9222 — and the agent brings its own tools for it:
-the harness starts `browser-mcp` from the uploaded agent folder, attached to that CDP, and the CLI finds
+browser and nothing more — linuxserver.io's Chromium, its CDP on 9222 — and the agent brings its own tools for it:
+this repository's eval lays every trial out as its compose does (`eval/compose.yaml`: the same browser, `browser-mcp` as a service of its own, `main` the agent's image), attached to that CDP, and the CLI finds
 it through the folder's settings, so the agent has a browser tool the way it has file tools. The browser is signed in; `https://www.linkedin.com/in/me/`
 opens the member's own profile, as on LinkedIn. What the agent may and may not do with it is the
 agent's own brief. The image holds the world, no agent and no CLI; Harbor installs the harness at trial
@@ -126,8 +126,7 @@ of the task's facts and compares, fact by fact.
 3. **The score** is the mean, every fact weighing the same; `reward.txt` holds it, 0 to 1.
 
 The answer is all that is graded. How the agent got there — its tool calls, its turns, what it
-clicked — is in the trial's `trajectory.json`, and the fake's click log stays in
-`/logs/agent/faker-clicks.jsonl`, for reading, not for the score.
+clicked — is in the trial's `trajectory.json`, for reading, not for the score.
 
 The answer, what was extracted from it and every fact with what it got are kept in the
 trial's `verifier/result.json`. `check.sh` probes the comparison offline on every task —
@@ -160,3 +159,6 @@ per version once that version is stable.
   `browser-mcp`), with the instruction the question
   alone: no environment paragraph, the MCP server named `browser-mcp`, the member's profile found
   through `/in/me/`.
+- 0.2.3 is the same thirteen asks and facts on linuxserver.io's Chromium rather than `dev-browser`: the
+  environment declares the world's address map (`BROWSER_MCP_MAP_HOSTS`) and the agent's browser tools,
+  uploaded beside the agent folder, answer LinkedIn's address from the world's site; no proxy, no click log.

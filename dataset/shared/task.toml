@@ -37,7 +37,7 @@ GEMINI_API_KEY = "${GEMINI_API_KEY:-}"
 [solution.env]
 
 # The environment is a browser and nothing more: its CDP on 9222. The browser tools are the agent's own
-# (browser-mcp in the agent folder), started by the harness and attached over CDP, so no MCP server is
+# (browser-mcp, from mcp/browser-mcp), a service of their own in this repository's eval (eval/compose.yaml) and attached over CDP, so no MCP server is
 # declared here. The container is ready when the browser answers on CDP.
 [environment.healthcheck]
 command = "curl -sf http://127.0.0.1:9222/json/version"

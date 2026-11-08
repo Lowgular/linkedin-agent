@@ -30,7 +30,8 @@ ALIASES = {
 DATASET = "lowgular/linkedin-po"
 JOBS_VOLUME = os.environ.get("JOBS_VOLUME", "linkedin-agent-jobs")
 JOBS_DIR = Path(os.environ.get("JOBS_DIR", f"/var/lib/docker/volumes/{JOBS_VOLUME}/_data"))
-AGENT_DIR = os.environ.get("AGENT_DIR", "/app")
+AGENT_DIR = os.environ.get("AGENT_DIR", "/app/agent")
+TRIAL_COMPOSE = os.environ.get("TRIAL_COMPOSE", "/app/eval/compose.yaml")
 
 
 def fail(message: str) -> None:
@@ -88,7 +89,7 @@ def main(argv: list[str]) -> None:
         rest += ["-k", "1"]
     command = [
         "harbor", "run", "--yes", *dataset,
-        "-a", f"linkedin_eval.folder:{harness.replace('-', '_')}", "--ak", f"agent_dir={AGENT_DIR}",
+        "-a", f"linkedin_eval.folder:{harness.replace('-', '_')}", "--ak", f"agent_dir={AGENT_DIR}", "--extra-docker-compose", TRIAL_COMPOSE,
         *(["-m", model] if model else []),
         "--jobs-dir", str(JOBS_DIR), *rest,
     ]

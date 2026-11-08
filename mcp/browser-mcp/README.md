@@ -3,7 +3,7 @@
 The agent's browser tools: an MCP server over Streamable HTTP that drives any browser speaking CDP —
 sessions, tabs, accessibility captures and actions, nothing site-specific. It belongs to the agent: the
 wiki (`../pages`) and `../memories/browser.md` are written against these tools. The browser is not: it is
-the environment's, reached by its CDP address, so the same tools work on the `dev-browser` container,
+the environment's, reached by its CDP address, so the same tools work on a Chromium in a container,
 a Chrome on your own machine, or a cloud browser that hands out a CDP endpoint.
 
 ```sh
@@ -11,16 +11,21 @@ npm install
 BROWSER_MCP_CDP=http://127.0.0.1:9222 npm start      # the MCP at http://127.0.0.1:9333/mcp, health at /health
 ```
 
-In compose the agent's container starts it (`../Dockerfile`, `../agent.sh`); in the eval the harness
-starts it in the trial's container from the folder it uploads. Either way it attaches to the
-`dev-browser` container's CDP at `127.0.0.1:9222`.
+`npm run dev` restarts it on every edit (`node --watch`). In the repository's compose it is a service of its
+own, `browser-mcp`, built from this folder (`Dockerfile`) and run with the folder mounted and watched, so an
+edit here is live on the next tool call; in the eval the harness uploads this folder to the trial's container
+and starts it there (`start.sh`). Either way it attaches to the browser's CDP at `127.0.0.1:9222`,
+the browser's container sharing its network.
 
 | variable | default | |
 |---|---|---|
-| `BROWSER_MCP_CDP` | `http://127.0.0.1:9222` | the browser to attach to: Chrome's `http(s)` CDP address, a `ws(s)` endpoint a browser service gives, or `steel`: a session in Steel's cloud, opened on the first browser step |
-| `STEEL_API_KEY` | | with `steel`, the account's key; never shown to the agent |
-| `STEEL_PROFILE` | | with `steel`, a profile id of the account to start each session from; the session does not save back to it |
-| `STEEL_SESSION_TIMEOUT` | `900000` | with `steel`, how long a session lives, in ms; the plan caps it |
+| `BROWSER_MCP_CDP` | required | the browser to attach to, no default — health and the log say which: Chrome's `http(s)` CDP address, a `ws(s)` endpoint a browser service gives, or a session API, an address ending in `/v1/sessions` (Steel's cloud: `https://api.steel.dev/v1/sessions`, or a self-hosted Steel), where a session is opened on the first browser step |
+| `STEEL_API_KEY` | | with a session API, the account's key (`steel-api-key`); never shown to the agent |
+| `BROWSER_MCP_PROFILE` | | with a session API, a profile id of the account to start each session from; the session does not save back to it. A browser attached by its CDP address has the profile it was started with |
+| `STEEL_SESSION_TIMEOUT` | `900000` | with a session API, how long a session lives, in ms; the plan caps it |
+| `BROWSER_MCP_PORT` | `9333` | where the MCP listens |
+| `BROWSER_MCP_HOST` | `127.0.0.1` | the address it listens on; `0.0.0.0` in a container whose port is published (the Host check still admits only localhost) |
+| `BROWSER_MCP_STATE_FILE` | `.runtime/<the CDP address>.json` | the sessions and tabs, kept across restarts, one file per browser: a file records its CDP address and refuses another |
 | `BROWSER_MCP_MAP_HOSTS` | | `host=base`, comma-separated: every request to the host answered from the same path under the base (`mapHosts`, below) |
 | `BROWSER_MCP_HOOKS_ON_CONNECT` | | a module awaited with `{ browser, context, mapHosts }` each time the service attaches to the browser |
 | `BROWSER_MCP_HOOKS_BEFORE_NAVIGATION` | | a module whose default export gets `{ url, run }` and returns the address to open |

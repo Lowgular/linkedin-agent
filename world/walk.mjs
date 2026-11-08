@@ -8,7 +8,7 @@
 //   node walk.mjs                          against the fake served plain on http://localhost:4173, in a Chrome of its own
 //   node walk.mjs --resolve 4443           against the fake under LinkedIn's names: https://www.linkedin.com
 //                                          resolved to 127.0.0.1:4443, certificate errors ignored
-//   node walk.mjs --cdp http://localhost:9224 --base https://www.linkedin.com
+//   node walk.mjs --cdp http://localhost:9222 --base https://linkedin-stub.web.app
 //                                          in a browser already running: the dev-browser container, its CDP mapped
 //                                          to localhost:9224 by compose
 import { existsSync, readFileSync } from 'node:fs';
@@ -23,8 +23,8 @@ const cdp = opt('--cdp', null);
 const base = (opt('--base', resolvePort ? 'https://www.linkedin.com' : 'http://localhost:4173')).replace(/\/$/, '');
 const specFile = opt('--world', ['world.json', path.join(here, 'world.json')].find(existsSync));
 const spec = JSON.parse(readFileSync(specFile, 'utf8'));
-const pw = ['../browser-mcp/node_modules/playwright-core/index.mjs'].map(p => path.resolve(here, p)).find(existsSync);
-if (!pw) { console.error('No playwright-core: npm install in browser-mcp/'); process.exit(2); }
+const pw = ['../mcp/browser-mcp/node_modules/playwright-core/index.mjs'].map(p => path.resolve(here, p)).find(existsSync);
+if (!pw) { console.error('No playwright-core: npm install in mcp/browser-mcp/'); process.exit(2); }
 const { chromium } = await import(pw);
 
 const failures = [];

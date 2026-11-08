@@ -1,5 +1,5 @@
 #!/bin/sh
-# browser-mcp/start.sh — start the agent's browser tools in the background, unless they already answer, and
+# mcp/browser-mcp/start.sh — start the agent's browser tools in the background, unless they already answer, and
 # wait until they do: the agent container's entrypoint runs it before Gemini CLI, the eval's harness in each
 # trial before the CLI. Dependencies are installed beside it on first use. BROWSER_MCP_LOG: where it logs.
 dir="$(cd "$(dirname "$0")" && pwd)"

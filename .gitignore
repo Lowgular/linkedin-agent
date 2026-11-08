@@ -1,6 +1,6 @@
 .DS_Store
 .obsidian/
-.claude/settings.local.json
+agent/.claude/settings.local.json
 .env
 compose.override.yaml
 dataset/dist/

@@ -1,4 +1,5 @@
-# eval/Dockerfile — the eval image: Python, Harbor, the harnesses that upload this agent folder, and the
+# eval/Dockerfile — the eval image: Python, Harbor, the harnesses that upload the agent folder (each trial laid
+# out by eval/compose.yaml, read from the repository mounted at /app), and the
 # Docker CLI with compose, through which Harbor starts each task's container on the host's Docker.
 # compose.yaml runs it as the `eval` service; nothing but Docker is needed on the host.
 FROM python:3.13-slim

@@ -4,8 +4,8 @@ A small slice of LinkedIn, recorded from the live site and then authored, that t
 against and the `lowgular/linkedin-po` dataset plays: my profile, my posts, the people who reacted
 to them and their profiles. Nothing in it is a real person: every name, headline, post and
 identifier is invented or replaced. It is published as a static site on Firebase Hosting
-(`world.toml` names it), and the browser everything runs on — the `dev-browser` image — fetches its
-pages from there under LinkedIn's own names.
+(`world.toml` names it), and the agent's browser tools answer LinkedIn's address from there, in the
+browser's connection, so whatever browser runs sees it under LinkedIn's own name.
 
 ```
 world.toml      the world's version, the runtime image, and the Firebase site it is published at
@@ -27,22 +27,19 @@ import writes into this folder. What is here is the result, and the tools that c
 ## How it is served
 
 ```
-local Docker: dev-browser (Chromium with CDP on 9222 + the fake); the agent's browser-mcp attaches over CDP
-   Chromium resolves www.linkedin.com, static.licdn.com, media.licdn.com to the fake
-   the fake, with FAKER_UPSTREAM set, is a proxy: it fetches each path from the site
-        │  www.linkedin.com/<path>  →  <site>/<path>;   another host  →  <site>/__h/<host>/<path>
+any browser over CDP (compose's Chromium, a dataset task's, Steel's cloud); browser-mcp attaches to it
+   BROWSER_MCP_MAP_HOSTS=www.linkedin.com=<site>: every request to www.linkedin.com fetched from the site
+        │  www.linkedin.com/<path>  →  <site>/<path>;   another recorded host, as the pages address it, under
+        │  www.linkedin.com/__h/<host>/<path>  →  <site>/__h/<host>/<path>
         ▼
 Firebase Hosting: a shell per page, its states as JSON, the assets; the shell rebuilds the state in the browser
 ```
 
 An agent opens `https://www.linkedin.com/…` through the MCP and sees the recorded page, with the
 accessibility tree the live page had; a click the recording holds moves to the recorded next state, a
-click it does not hold does nothing; a page that was never walked is answered "Not recorded". Clicks are
-logged where the browser runs, in `/logs/agent/faker-clicks.jsonl`, not on the site. `/in/me/`
-redirects to the signed-in member's profile, as on LinkedIn.
-
-`docker compose up -d dev-browser` from the repository root starts it; `https://localhost:4443/__world/`
-lists the world, and `chrome://inspect` at `localhost:9224` shows the agent's page live.
+click it does not hold does nothing; a page that was never walked is answered "Not recorded". `/in/me/`
+redirects to the signed-in member's profile, as on LinkedIn. `<site>/__world/` lists the world; in
+compose, http://localhost:3000 shows the browser the agent clicks in.
 
 ## The loop
 
@@ -63,12 +60,12 @@ live page reads too.
 To change who reacted, or a post's age or impressions, edit `world.json` and run `node compose.mjs`;
 to add a person, add them to `world.json` with a name, a headline, a location, a connections count
 and an About. The composed dialog and profile states are marked `synth` and remade on every run.
-Then deploy (below) and prove the loop holds, against the browser's CDP:
+Then deploy (below) and prove the loop holds, against a browser's CDP — a Chrome of your own started
+with `--remote-debugging-port=9222`, opened on the site's own address:
 
 ```sh
-docker compose up -d dev-browser
-(cd browser-mcp && npm install)     # walk.mjs drives the browser with the playwright-core installed there
-node world/walk.mjs --cdp http://localhost:9224 --base https://www.linkedin.com
+(cd mcp/browser-mcp && npm install)     # walk.mjs drives the browser with the playwright-core installed there
+node world/walk.mjs --cdp http://localhost:9222 --base https://linkedin-stub.web.app
 ```
 
 ## Publishing it
@@ -86,6 +83,8 @@ The pages carry `noindex` and the site's root says it is a test fixture.
 
 ## Versions
 
+- (export) every recorded host but a page's own is addressed under the site's `/__h/<host>`, so one
+  address map — the site's own host — is all a browser needs; needs a deploy to go live.
 - 0.3.3: `/in/me/` redirects to the signed-in member's profile, as on LinkedIn, so an agent finds
   "my profile" without being told its address. Published as a static site instead of an image; the
   `dev-browser` 0.3.0 proxies to it. Folder names percent-encoded for Windows.

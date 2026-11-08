@@ -5,6 +5,7 @@ import path from 'node:path';
 import { mapHosts, settled } from './hosts.mjs';
 
 const id = () => randomBytes(8).toString('hex');
+const SESSIONS = /^https?:\/\/.+\/v1\/sessions\/?$/;
 export function taggedUrl(value, run, enabled = true) {
   const url = new URL(value);
   if (!['http:', 'https:', 'about:'].includes(url.protocol) || (url.protocol === 'about:' && value !== 'about:blank')) {
@@ -15,7 +16,7 @@ export function taggedUrl(value, run, enabled = true) {
 }
 
 export class BrowserState {
-  constructor({ cdp = 'http://127.0.0.1:9222', stateFile, hooks = {}, steel = {}, hostMap = {} }) {
+  constructor({ cdp, stateFile, hooks = {}, steel = {}, hostMap = {} }) {
     this.cdp = cdp; this.stateFile = stateFile; this.hooks = hooks; this.steel = steel; this.hostMap = hostMap; this.steelSession = null;
     this.sessions = {}; this.handles = new Map(); this.captures = new Map(); this.queues = new Map();
     this.saving = Promise.resolve(); this.connecting = null; this.connection = null;
@@ -53,9 +54,10 @@ export class BrowserState {
     if (this.connection?.isConnected()) return this.connection;
     if (!this.connecting) this.connecting = (async () => {
       // An http(s) address is Chrome's own: make sure it has a tab before attaching. A ws(s) address is a
-      // browser service's endpoint, with no /json to ask: a tab is opened once attached. `steel` is a session
-      // in Steel's cloud, created here, attached by its endpoint.
-      const endpoint = this.cdp === 'steel' ? await this.startSteel() : this.cdp;
+      // browser service's endpoint, with no /json to ask: a tab is opened once attached. An address ending in
+      // /v1/sessions is a session API (Steel's, https://api.steel.dev/v1/sessions, or a self-hosted one): a
+      // session is created there and attached by the endpoint it gives.
+      const endpoint = SESSIONS.test(this.cdp) ? await this.startSession() : this.cdp;
       const http = /^https?:/.test(endpoint);
       if (http) {
         const targets = await fetch(`${this.cdp}/json`, { signal: AbortSignal.timeout(5000) }).then(r => r.json());
@@ -75,17 +77,17 @@ export class BrowserState {
     })().catch(error => { throw new Error(`Browser unavailable at ${this.cdp}: ${error.message}`); }).finally(() => { this.connecting = null; });
     return this.connecting;
   }
-  // A session in Steel's cloud: one per connection, on the account's profile when one is named (read, never
+  // A session from the session API: one per connection, on the account's profile when one is named (read, never
   // saved back), released when it times out or the service stops; watched at its page in Steel's dashboard.
-  async startSteel() {
+  async startSession() {
     const { key, timeout = 900000, profile } = this.steel;
-    if (!key) throw new Error('STEEL_API_KEY is not set.');
-    const response = await fetch('https://api.steel.dev/v1/sessions', { method: 'POST', headers: { 'steel-api-key': key, 'content-type': 'application/json' }, body: JSON.stringify({ timeout, ...(profile ? { profileId: profile } : {}) }), signal: AbortSignal.timeout(30000) });
-    if (!response.ok) throw new Error(`Steel refused a session: ${response.status} ${(await response.text()).slice(0, 200)}`);
+    const response = await fetch(this.cdp.replace(/\/$/, ''), { method: 'POST', headers: { ...(key ? { 'steel-api-key': key } : {}), 'content-type': 'application/json' }, body: JSON.stringify({ timeout, ...(profile ? { profileId: profile } : {}) }), signal: AbortSignal.timeout(30000) });
+    if (!response.ok) throw new Error(`The session API refused a session: ${response.status} ${(await response.text()).slice(0, 200)}${key ? '' : ' (STEEL_API_KEY is not set)'}`);
     const session = await response.json();
     this.steelSession = session.id;
-    console.log(`Steel session ${session.id}: watch it at ${session.sessionViewerUrl ?? 'https://app.steel.dev'}`);
-    return session.websocketUrl ?? `wss://connect.steel.dev?apiKey=${encodeURIComponent(key)}&sessionId=${session.id}`;
+    console.log(`Session ${session.id}: watch it at ${session.sessionViewerUrl ?? session.debugUrl ?? 'its dashboard'}`);
+    if (!session.websocketUrl) throw new Error('The session API gave no websocketUrl to attach to.');
+    return session.websocketUrl;
   }
   async targetId(page) {
     const cdp = await page.context().newCDPSession(page);
@@ -213,6 +215,6 @@ export class BrowserState {
   async disconnect() {
     await this.saving;
     if (this.connection) await this.connection.close(); // Disconnect CDP; does not close external Chrome.
-    if (this.steelSession) await fetch(`https://api.steel.dev/v1/sessions/${this.steelSession}/release`, { method: 'POST', headers: { 'steel-api-key': this.steel.key }, signal: AbortSignal.timeout(10000) }).catch(() => {});
+    if (this.steelSession) await fetch(`${this.cdp.replace(/\/$/, '')}/${this.steelSession}/release`, { method: 'POST', headers: this.steel.key ? { 'steel-api-key': this.steel.key } : {}, signal: AbortSignal.timeout(10000) }).catch(() => {});
   }
 }

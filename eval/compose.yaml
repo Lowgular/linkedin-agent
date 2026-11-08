@@ -1,0 +1,52 @@
+# eval/compose.yaml — every trial laid out the way compose.yaml lays out a session: the same browser image, the
+# browser tools from their own folder, the agent's image from its own; the world stays in the cloud. Harbor merges
+# it over a task's own environment (--extra-docker-compose, the runner passes it): `main`, where Harbor installs
+# the CLI, uploads the agent folder and runs the grader, becomes the agent's image on the browser's network, as
+# the agent service is in compose.yaml. Nothing published, nothing kept: a fresh browser and profile per trial.
+# Paths are the repository's in the eval container (/app): Harbor sets the task's folder as the project directory,
+# which relative paths would resolve against.
+services:
+  browser:
+    image: lscr.io/linuxserver/chromium@sha256:59d1bfa98a6ab759fce078e5a714de3920f4c618b8939a0df6e1dec7d25c7aba
+    shm_size: 1gb
+    configs:
+      - source: browser-autostart
+        target: /config/.config/labwc/autostart
+        mode: 0755
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      CHROME_CLI: --remote-debugging-port=9222 --remote-allow-origins=*
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:9222/json/version"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+      start_period: 10s
+  browser-mcp:
+    build: /app/mcp/browser-mcp
+    image: ghcr.io/lowgular/browser-mcp:0.1.0
+    network_mode: "service:browser"
+    depends_on:
+      browser:
+        condition: service_healthy
+    environment:
+      BROWSER_MCP_CDP: http://127.0.0.1:9222
+      BROWSER_MCP_MAP_HOSTS: www.linkedin.com=${WORLD_URL:-https://linkedin-stub.web.app}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:9333/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  main:
+    build:
+      context: /app/agent
+    network_mode: "service:browser"
+    depends_on:
+      browser-mcp:
+        condition: service_healthy
+configs:
+  browser-autostart:
+    content: |
+      #!/bin/bash
+      while true; do wrapped-chromium $${CHROME_CLI}; sleep 1; done

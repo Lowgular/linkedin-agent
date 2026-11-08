@@ -6,10 +6,11 @@ trajectory and the cost into the trial result. What they cannot do is start from
 folder: they run the CLI bare in /app. A page-object agent is a folder — its brief
 (AGENTS.md, which every one of these CLIs reads; CLAUDE.md for Claude), its wiki, its
 settings — so these subclasses add one step: once the CLI is installed, the folder
-`agent_dir` names is uploaded to /app, minus its secrets, and the CLI starts inside it.
+`agent_dir` names is uploaded to /app, minus its secrets, and the CLI starts inside it. Its
+tools are the trial's own services (eval/compose.yaml), where the folder's settings find them.
 
-    harbor run -d lowgular/linkedin-po@0.2.1 -a linkedin_eval.folder:gemini_cli \
-        --ak agent_dir=/app -m gemini/gemini-3.8-flash
+    harbor run -d lowgular/linkedin-po@0.2.3 -a linkedin_eval.folder:gemini_cli \
+        --ak agent_dir=/app/agent --extra-docker-compose /app/eval/compose.yaml -m gemini/gemini-3.8-flash
 
 Each class also goes by Harbor's agent name with underscores — linkedin_eval.folder:claude_code —
 and carries the model it runs when -m is not given. Everything else — login, permissions, logs — is
@@ -26,8 +27,8 @@ from harbor.agents.installed.codex import Codex as _Codex, CodexOptions
 from harbor.agents.installed.gemini_cli import GeminiCli as _GeminiCli, GeminiCliOptions
 from harbor.agents.installed.opencode import OpenCode as _OpenCode, OpenCodeOptions
 
-# What never leaves the machine when a folder is uploaded.
-EXCLUDES = (".obsidian", ".DS_Store", "settings.local.json", ".env", ".env.*", "node_modules", ".git", "world", "eval", "telemetry", "dataset")  # the world, the eval, the tracing and the dataset are this repository's, not the agent's; the task image already has the world, and the dataset holds the answers
+# What never leaves the machine when a folder is uploaded: secrets, and what tools install or keep at run time.
+EXCLUDES = (".obsidian", ".DS_Store", "settings.local.json", ".env", ".env.*", "node_modules", ".git", ".runtime")
 WORKDIR = "/app"
 
 
@@ -51,22 +52,22 @@ class AgentFolder:
         source = Path(self.options.agent_dir).expanduser()
         if not source.is_dir():
             raise ValueError(f"agent_dir must name a folder: {source}")
-        staged = Path(tempfile.mkdtemp(prefix="agent-folder-"))
-        try:
-            shutil.copytree(source, staged / "agent", ignore=shutil.ignore_patterns(*EXCLUDES), symlinks=False)
-            await environment.exec(command=f"mkdir -p {WORKDIR}")
-            await environment.upload_dir(staged / "agent", WORKDIR)
-        finally:
-            shutil.rmtree(staged, ignore_errors=True)
-        # The agent's browser tools: started from the folder, attached to the task's browser over CDP.
-        if (source / "browser-mcp" / "start.sh").is_file():
-            started = await environment.exec(command=f"sh {WORKDIR}/browser-mcp/start.sh", env={"BROWSER_MCP_LOG": "/logs/agent/browser-mcp.log"})
-            if started.return_code:
-                raise RuntimeError(f"browser-mcp did not start: {started.stderr or started.stdout}")
+        await self._upload(environment, source, WORKDIR)
         # Which folder ran, by its own agent.json (name and version), kept with the trial's logs.
         if (source / "agent.json").is_file():
             self.logs_dir.mkdir(parents=True, exist_ok=True)
             shutil.copy(source / "agent.json", self.logs_dir / "agent.json")
+
+
+    @staticmethod
+    async def _upload(environment, source, target):
+        staged = Path(tempfile.mkdtemp(prefix="agent-folder-"))
+        try:
+            shutil.copytree(source, staged / "folder", ignore=shutil.ignore_patterns(*EXCLUDES), symlinks=False)
+            await environment.exec(command=f"mkdir -p {target}")
+            await environment.upload_dir(staged / "folder", target)
+        finally:
+            shutil.rmtree(staged, ignore_errors=True)
 
 
 class ClaudeCode(AgentFolder, _ClaudeCode):

@@ -1,43 +1,85 @@
 # compose.yaml — the agent and its browser, for any machine with Docker: nothing installed on the host.
 #
 #   cp .env.example .env              then put your Gemini API key in it
-#   docker compose run --rm agent     Gemini CLI in this folder, the browser started first; ask it about your profile
-#   docker compose up -d dev-browser  the browser alone: CDP at localhost:9224, for chrome://inspect or a CLI on
-#                                     this machine with browser-mcp started there (browser-mcp/README.md)
+#   docker compose run --rm agent     Gemini CLI in agent/, the browser and its tools started first; ask it about your profile
+#   docker compose up -d browser-mcp  the browser and its tools alone: the MCP at localhost:9333 for a CLI on this
+#                                     machine, the browser's screen at http://localhost:3000
 #   docker compose down               stop everything
 #
 # The world is not here: it is a static site (world/, published by world/deploy.sh), and the browser's fake
-# proxies LinkedIn's names to it. The agent container shares the browser's network: its entrypoint starts
-# browser-mcp on 127.0.0.1:9333, as the folder's .gemini/settings.json says, attached to the browser's CDP on
-# 127.0.0.1:9222. Sessions and the CLI's own state persist in the gemini-home volume; the folder itself is
+# proxies LinkedIn's names to it. The browser tools (mcp/browser-mcp) and the agent share the browser's network:
+# browser-mcp serves 127.0.0.1:9333, as agent/.gemini/settings.json says, attached to the browser's CDP on
+# 127.0.0.1:9222, and restarts on every edit to mcp/browser-mcp. Sessions and the CLI's own state persist in the
+# gemini-home volume; the folder itself is
 # yours, bind-mounted, so what you change in the brief or the wiki is what the next run reads.
 # The project's name is fixed, so the volumes keep their names whatever the clone's folder is called.
 name: linkedin-agent
 services:
-  dev-browser:
-    # The browser, built here from dev-browser/: a headless Chromium with its CDP on 9222, resolving LinkedIn's
-    # names to a proxy that fetches every page from the world's site (WORLD_URL). No browser tools here: the
-    # agent brings its own (browser-mcp/) and attaches over CDP. The tag is the one the dataset's tasks are FROM.
-    build: ./dev-browser
-    image: ghcr.io/lowgular/dev-browser:0.3.0
-    pull_policy: build
+  browser:
+    # The browser: linuxserver.io's Chromium (github.com/linuxserver/docker-chromium), a real, headed Chromium on a
+    # desktop streamed to http://localhost:3000, where you watch the agent click; its CDP on 9222, on the
+    # container's loopback, for browser-mcp, which shares its network (as do the agent and the collector), so the
+    # ports of all of them are published here. Nothing of the world in it: browser-mcp maps LinkedIn's address to
+    # the world's site in the browser's connection.
+    # Its profile — cookies, sign-ins, history — is the container's /config, a volume named after BROWSER_PROFILE
+    # (default: default), so it outlives the container and another name is another profile.
+    image: lscr.io/linuxserver/chromium@sha256:59d1bfa98a6ab759fce078e5a714de3920f4c618b8939a0df6e1dec7d25c7aba
+    shm_size: 1gb
+    configs:
+      - source: browser-autostart
+        target: /config/.config/labwc/autostart
+        mode: 0755
+    volumes:
+      - browser-profile:/config
     environment:
-      WORLD_URL: ${WORLD_URL:-https://linkedin-stub.web.app}
+      PUID: "1000"
+      PGID: "1000"
+      CHROME_CLI: --remote-debugging-port=9222 --remote-allow-origins=*
     ports:
-      - "127.0.0.1:9224:9222"   # CDP: chrome://inspect (Configure... localhost:9224), or a browser-mcp on this machine
-      - "127.0.0.1:4443:4443"   # the world: https://localhost:4443/__world/ lists it (accept the certificate)
+      - "127.0.0.1:3000:3000"   # the browser's desktop: http://localhost:3000
+      - "127.0.0.1:9333:9333"   # browser-mcp: http://localhost:9333/mcp, for a CLI on this machine
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://127.0.0.1:9222/json/version"]
       interval: 2s
       timeout: 3s
-      retries: 45
-      start_period: 5s
-  agent:
-    build: .
-    image: ghcr.io/lowgular/linkedin-agent:0.1.0
-    network_mode: "service:dev-browser"
+      retries: 60
+      start_period: 10s
+  browser-mcp:
+    # The browser tools, served on their own from mcp/browser-mcp, mounted: an edit restarts the server (node
+    # --watch), and the next tool call reaches the new code; the sessions and tabs survive in its .runtime/.
+    # It attaches to the browser's CDP — the browser service's by default, on loopback since the network is shared and
+    # Chromium accepts CDP only by IP or localhost, or a session in Steel's cloud (BROWSER_CDP=https://api.steel.dev/v1/sessions and
+    # STEEL_API_KEY in .env) — and answers LinkedIn's address from the world's site in the browser's
+    # connection, so any browser sees the world; browser-mcp itself knows nothing of it.
+    build: ./mcp/browser-mcp
+    image: ghcr.io/lowgular/browser-mcp:0.1.0
+    network_mode: "service:browser"
     depends_on:
-      dev-browser:
+      browser:
+        condition: service_healthy
+    command: ["node", "--watch", "server.mjs"]
+    environment:
+      BROWSER_MCP_HOST: 0.0.0.0   # reachable through the published port too; the Host check still admits only localhost
+      # Which browser, explicitly: BROWSER_CDP in .env, or this compose file's own browser service — on the
+      # shared loopback — when .env says nothing. curl localhost:9333/health says which one it is on.
+      BROWSER_MCP_CDP: ${BROWSER_CDP:-http://127.0.0.1:9222}
+      BROWSER_MCP_MAP_HOSTS: www.linkedin.com=${WORLD_URL:-https://linkedin-stub.web.app}
+      STEEL_API_KEY: ${STEEL_API_KEY:-}
+      BROWSER_MCP_PROFILE: ${BROWSER_PROFILE:-}
+      STEEL_SESSION_TIMEOUT: ${STEEL_SESSION_TIMEOUT:-900000}
+    volumes:
+      - ./mcp/browser-mcp:/opt/browser-mcp
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:9333/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  agent:
+    build: ./agent
+    image: ghcr.io/lowgular/linkedin-agent:0.1.0
+    network_mode: "service:browser"
+    depends_on:
+      browser-mcp:
         condition: service_healthy
       collector:                # with the trace profile only: started with the agent, so its traces have somewhere to go
         condition: service_started
@@ -46,13 +88,6 @@ services:
       - path: .env
         required: false
     environment:
-      # browser-mcp, started by the image's entrypoint, attaches to the browser's CDP: dev-browser's by default
-      # — the agent shares its network, so that is loopback, since Chromium accepts CDP only by IP or localhost,
-      # not by a name — or a session in Steel's cloud (BROWSER_CDP=steel and STEEL_API_KEY in .env). Either way
-      # LinkedIn's address is answered from the world's site in the browser's connection, so any browser sees
-      # the world; browser-mcp itself knows nothing of it.
-      BROWSER_MCP_CDP: ${BROWSER_CDP:-http://127.0.0.1:9222}
-      BROWSER_MCP_MAP_HOSTS: www.linkedin.com=${WORLD_URL:-https://linkedin-stub.web.app}
       # Tracing to Google Cloud, on when .env names a project (and COMPOSE_PROFILES=trace starts the collector):
       # the CLI sends its telemetry over OTLP to the collector service, which ships every model request and
       # tool call as a span to Cloud Trace, the events to Cloud Logging, token counts to Cloud Monitoring.
@@ -66,7 +101,7 @@ services:
       GEMINI_TELEMETRY_LOG_PROMPTS: ${GEMINI_TELEMETRY_LOG_PROMPTS:-true}
       GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
     volumes:
-      - .:/app
+      - ./agent:/app
       - gemini-home:/root/.gemini
     working_dir: /app
     stdin_open: true
@@ -77,9 +112,9 @@ services:
     # this machine (`gcloud auth application-default login`), mounted read-only.
     image: otel/opentelemetry-collector-contrib:0.140.0
     profiles: ["trace"]
-    network_mode: "service:dev-browser"
+    network_mode: "service:browser"
     depends_on:
-      - dev-browser
+      - browser
     command: ["--config=/etc/otelcol/collector.yaml"]
     user: "0:0"
     environment:
@@ -103,6 +138,7 @@ services:
     environment:
       # A build of dataset/ (dataset/build.sh) runs instead of the Hub's, when there is one; -v runs the Hub's.
       DATASET_DIR: /app/dataset/dist
+      AGENT_DIR: /app/agent
     volumes:
       - .:/app:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -115,7 +151,16 @@ services:
     entrypoint: ["python", "-m", "linkedin_eval.results"]
     volumes:
       - jobs:/var/lib/docker/volumes/linkedin-agent-jobs/_data:ro
+configs:
+  browser-autostart:
+    # The desktop's start script: the image's own runs Chromium once, so a browser whose last window closed —
+    # the agent closing its last tab — would stay gone; this one starts it again.
+    content: |
+      #!/bin/bash
+      while true; do wrapped-chromium $${CHROME_CLI}; sleep 1; done
 volumes:
+  browser-profile:
+    name: linkedin-agent-browser-${BROWSER_PROFILE:-default}
   gemini-home:
   jobs:
     name: linkedin-agent-jobs

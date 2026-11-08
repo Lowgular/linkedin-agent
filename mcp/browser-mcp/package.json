@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
@@ -15,5 +16,5 @@
     "playwright-core": "1.64.0",
     "zod": "4.4.3"
   },
-  "description": "The browser tools of the linkedin agent: an MCP server over any browser that speaks CDP."
+  "description": "Browser tools as an MCP server over any browser that speaks CDP."
 }
