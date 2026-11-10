@@ -1,0 +1,11 @@
+# The plain LinkedIn agent: only the browser MCP, no wiki. Loaded only when Codex runs inside this folder.
+model = "gpt-6-luna"
+model_reasoning_effort = "medium"
+approval_policy = "never"
+sandbox_mode = "read-only"
+
+[features]
+plugins = false
+
+[mcp_servers.browser-mcp]
+url = "http://127.0.0.1:9333/mcp"

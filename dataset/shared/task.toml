@@ -1,5 +1,7 @@
 schema_version = "1.4"
-artifacts = []
+# The agent's trajectory is the one thing the grader reads: kept with the trial and handed to the grader at the
+# same path, so the grader runs in a container of its own and a recorded job can be regraded when it changes.
+artifacts = ["/logs/agent/trajectory.json"]
 
 [task]
 name = "lowgular/{{currentFolder}}"
@@ -13,8 +15,17 @@ keywords = []
 [verifier]
 timeout_sec = 120.0
 collect = []
+environment_mode = "separate"
 
 [verifier.env]
+# The grader's extractor, from the host. EXTRACTOR=claude|gemini chooses (unset: Claude with a Claude login,
+# Gemini with only a Gemini key); EXTRACTOR_MODEL overrides its model. Claude Opus logs in with a console key
+# or the Claude Code subscription token, Gemini with a Gemini API key. The grader's alone: the agent never sees them.
+EXTRACTOR = "${EXTRACTOR:-}"
+EXTRACTOR_MODEL = "${EXTRACTOR_MODEL:-}"
+ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY:-}"
+CLAUDE_CODE_OAUTH_TOKEN = "${CLAUDE_CODE_OAUTH_TOKEN:-}"
+GEMINI_API_KEY = "${GEMINI_API_KEY:-}"
 
 [agent]
 timeout_sec = 600.0
@@ -25,14 +36,6 @@ build_timeout_sec = 600.0
 os = "linux"
 
 [environment.env]
-# The grader's extractor, from the host. EXTRACTOR=claude|gemini chooses (unset: Claude with a Claude login,
-# Gemini with only a Gemini key); EXTRACTOR_MODEL overrides its model. Claude Haiku logs in with a console key
-# or the Claude Code subscription token, Gemini with a Gemini API key.
-EXTRACTOR = "${EXTRACTOR:-}"
-EXTRACTOR_MODEL = "${EXTRACTOR_MODEL:-}"
-ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY:-}"
-CLAUDE_CODE_OAUTH_TOKEN = "${CLAUDE_CODE_OAUTH_TOKEN:-}"
-GEMINI_API_KEY = "${GEMINI_API_KEY:-}"
 
 [solution.env]
 

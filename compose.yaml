@@ -63,7 +63,8 @@ services:
       # Which browser, explicitly: BROWSER_CDP in .env, or this compose file's own browser service — on the
       # shared loopback — when .env says nothing. curl localhost:9333/health says which one it is on.
       BROWSER_MCP_CDP: ${BROWSER_CDP:-http://127.0.0.1:9222}
-      BROWSER_MCP_MAP_HOSTS: www.linkedin.com=${WORLD_URL:-https://linkedin-stub.web.app}
+      # LinkedIn's address answered from the world's site; WORLD_MAP= (empty) maps nothing: the real LinkedIn.
+      BROWSER_MCP_MAP_HOSTS: ${WORLD_MAP-www.linkedin.com=${WORLD_URL:-https://linkedin-stub.web.app}}
       STEEL_API_KEY: ${STEEL_API_KEY:-}
       BROWSER_MCP_PROFILE: ${BROWSER_PROFILE:-}
       STEEL_SESSION_TIMEOUT: ${STEEL_SESSION_TIMEOUT:-900000}
@@ -138,12 +139,15 @@ services:
     environment:
       # A build of dataset/ (dataset/build.sh) runs instead of the Hub's, when there is one; -v runs the Hub's.
       DATASET_DIR: /app/dataset/dist
-      AGENT_DIR: /app/agent
+      AGENT_DIR: ${AGENT_DIR:-/app/agent}   # another agent folder: AGENT_DIR=/app/agent-plain docker compose run --rm eval …
     volumes:
       - .:/app:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - jobs:/var/lib/docker/volumes/linkedin-agent-jobs/_data
       - harbor-cache:/root/.cache
+      # Codex's own login, for `-h codex` on a ChatGPT plan instead of an API key: the folder `codex login` keeps,
+      # read-only; run.py hands its auth.json to Harbor, which copies it into each trial.
+      - ${CODEX_HOME:-~/.codex}:/root/.codex-host:ro
   eval-results:
     # The latest runs and their scores: `docker compose run --rm eval-results` (a number for more than three).
     image: ghcr.io/lowgular/linkedin-eval:0.1.0

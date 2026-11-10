@@ -1,21 +1,16 @@
 {
   "answer": {
     "post": {
-      "link": "https://www.linkedin.com/feed/update/urn:li:activity:7518907410514857984/",
-      "text": "On our last project the pricing page worked better with one change per week.",
       "reactions": 3,
       "reactors": [
         {
-          "name": "Igor Baranov",
-          "link": "https://www.linkedin.com/in/igor-baranov-8q3m2/"
+          "name": "Igor Baranov"
         },
         {
-          "name": "Inês Ferreira",
-          "link": "https://www.linkedin.com/in/ines-ferreira-5d9x4/"
+          "name": "Inês Ferreira"
         },
         {
-          "name": "Teodor Lis",
-          "link": "https://www.linkedin.com/in/teodor-lis-7w1c9/"
+          "name": "Teodor Lis"
         }
       ]
     }

@@ -16,8 +16,8 @@ Everything runs in Docker. You need nothing else on your machine: no Node, no Py
    Docker Engine on Linux. On Windows, Docker Desktop needs WSL 2, which its installer offers to set up.
    On Linux, your user must be in the `docker` group (`sudo usermod -aG docker $USER`, then log in
    again).
-2. **A Gemini API key.** Get one at https://aistudio.google.com/apikey. The agent runs on Gemini 3.8
-   Flash and is billed per token: one question costs a few cents.
+2. **A Gemini API key.** Get one at https://aistudio.google.com/apikey. The agent runs on Gemini 3.5
+   Flash-Lite and is billed per token: one question costs a few cents.
 3. **Time for the first build.** The first run downloads the browser image, about 1.5 GB. Do it before
    the workshop, not on the venue's network.
 
@@ -60,7 +60,7 @@ The agent reads its wiki, opens the pages, and answers. Your folder is mounted i
 you change `agent/AGENTS.md` or a page in `agent/pages/`, the next session reads the change. `/quit` leaves the CLI.
 
 **http://localhost:3000** is the browser's screen, live: the agent's tabs open there and you see every
-click. To look around the world yourself, https://linkedin-stub.web.app/__world/ lists every recorded page. `docker compose up -d browser-mcp` starts the browser and the tools without the
+click. To look around the world yourself, `world/world/` holds every recorded page, one folder per address. `docker compose up -d browser-mcp` starts the browser and the tools without the
 agent. When you are done, `docker compose down` stops everything.
 
 ### Another browser: Steel's cloud
@@ -100,7 +100,7 @@ Options:
 | Flag | Does |
 |---|---|
 | `-i <task>` | runs one task; repeat it for several |
-| `-m flash-lite` | runs the agent on Gemini 3.5 Flash-Lite, cheaper and weaker |
+| `-m flash` | runs the agent on Gemini 3.8 Flash, stronger and about three times the cost |
 | `-x gemini` | grades with Gemini instead of Claude Haiku |
 | `-v <version>` | runs a specific version of the dataset |
 

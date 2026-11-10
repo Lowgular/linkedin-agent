@@ -1,0 +1,41 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "browser-mcp": {
+      "type": "remote",
+      "url": "http://127.0.0.1:9333/mcp",
+      "enabled": true
+    }
+  },
+  "tools": {
+    "bash": false,
+    "edit": false,
+    "write": false,
+    "patch": false,
+    "webfetch": false,
+    "task": false
+  },
+  "permission": {
+    "bash": "deny",
+    "edit": "deny",
+    "webfetch": "deny",
+    "task": "deny",
+    "external_directory": {
+      "*": "deny",
+      "/logs/agent/opencode/**": "allow"
+    }
+  },
+  "provider": {
+    "opencode-go": {
+      "options": {
+        "timeout": 300000
+      }
+    },
+    "google": {
+      "options": {
+        "apiKey": "{env:GEMINI_API_KEY}"
+      }
+    }
+  },
+  "snapshot": false
+}

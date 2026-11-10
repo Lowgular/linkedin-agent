@@ -19,7 +19,7 @@ const { score, correctness } = await import(path.join(here, 'shared/tests/correc
 const clone = v => JSON.parse(JSON.stringify(v));
 const strip = (v, key) => JSON.parse(JSON.stringify(v, (k, x) => k === key ? undefined : x));
 const nulled = v => Array.isArray(v) ? null : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, nulled(x)])) : null;
-const altered = v => Array.isArray(v) ? v.slice(0, -1) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, altered(x)])) : typeof v === 'number' ? v + 1 : typeof v === 'string' ? v + ' x' : v;
+const altered = v => Array.isArray(v) ? (v.length ? v.slice(0, -1) : [{ name: 'Someone Else' }]) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, altered(x)])) : typeof v === 'number' ? v + 1 : typeof v === 'string' ? v + ' x' : v;
 const widened = v => { const c = clone(v); let done = false; const walk = x => { if (done || !x || typeof x !== 'object') return; if (Array.isArray(x)) { x.push(x.length && typeof x[0] === 'object' ? { name: 'Someone Else', link: 'https://www.linkedin.com/in/someone-else/' } : 'something else'); done = true; return; } Object.values(x).forEach(walk); }; walk(c); return done ? c : null; };
 const loose = v => JSON.parse(JSON.stringify(v, (k, x) => typeof x === 'number' ? x.toLocaleString('en-US') : k === 'posted' ? x.replace(/^(\d+)d$/, '$1 days ago').replace(/^(\d+)w$/, '$1 weeks ago') : k === 'from' ? x.replace(/^Apr /, 'April ') : k === 'to' && x === 'Present' ? 'now' : k === 'link' ? x.replace('https://www.', 'www.').replace(/\/$/, '') : k === 'text' ? x.slice(0, 40) : x));
 const show = r => r.score.toFixed(2);
@@ -34,7 +34,8 @@ for (const task of readdirSync(path.join(here, 'tasks')).sort()) {
   const facts = expected.answer, options = { ordered: !!expected.ordered, question };
   const probes = [
     ['facts', score(facts, facts, options), s => s === 1],
-    ['no links', score(facts, strip(facts, 'link'), options), s => s === 1],
+    // Without links the facts still score 1, unless the question asks for a link: then the link is a fact.
+    ['no links', score(facts, strip(facts, 'link'), options), /\blink\b/i.test(question) ? s => s < 1 : s => s === 1],
     ['nothing', score(facts, nulled(facts), options), s => s === 0],
     ['altered', score(facts, altered(facts), options), s => s < 1],
     ['loose', score(facts, loose(facts), options), s => s === 1],

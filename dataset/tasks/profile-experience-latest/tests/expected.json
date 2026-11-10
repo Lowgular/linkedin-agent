@@ -3,11 +3,9 @@
     "position": {
       "position": "Engineering Lead",
       "company": {
-        "name": "Northwind Software",
-        "link": "https://www.linkedin.com/company/northwind-software/"
+        "name": "Northwind Software"
       },
-      "from": "Apr 2026",
-      "to": "Present"
+      "from": "Apr 2026"
     }
   }
 }

@@ -21,7 +21,9 @@ import { tmpdir } from 'node:os';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-export const EXTRACTORS = { claude: 'claude-haiku-5-5', gemini: 'gemini-3.5-flash-lite' };
+// The extractor is part of the grade: Claude Opus, the strongest reader, so that hedged answers are read as their
+// author meant them (Haiku took an answer's alternative for its answer). Gemini is the fallback with only a Gemini key.
+export const EXTRACTORS = { claude: 'claude-opus-5-5', gemini: 'gemini-3.5-flash-lite' };
 /** Which extractor runs, and on which model: EXTRACTOR, else Claude with a Claude login, else Gemini with a key. */
 export function extractor(env = process.env) {
   const asked = (env.EXTRACTOR || '').trim().toLowerCase();
@@ -76,7 +78,7 @@ export function schemaFor(facts, shape = null) {
 }
 
 export function extractorPrompt(question, answer) {
-  return `Read the assistant's message below and call the answer tool with what it states — nothing it does not say. Copy names, numbers, dates and quoted text as written. A list holds the items the message gives as its answer to the question, in the message's order; it leaves out what the message mentions only as context — items it says it excluded, runners-up, what else is on the page — and is empty when the message says there are none. A count the message gives as none, no or zero is 0. Leave null what the message does not say.
+  return `Read the assistant's message below and call the answer tool with what it states — nothing it does not say. Copy names, numbers, dates and quoted text as written. A list holds the items the message gives as its answer to the question, in the message's order; it leaves out what the message mentions only as context — items it says it excluded, runners-up, what else is on the page — and is empty when the message says there are none. When the message gives a definite answer and also an alternative — a borderline case, a broader reading, an "including" variant — take the definite answer, for the list and for every total. A count the message gives as none, no or zero is 0. Leave null what the message does not say.
 
 The question the message answers:
 ${question.trim()}
@@ -154,10 +156,11 @@ const MONTHS = { january: 'jan', february: 'feb', march: 'mar', april: 'apr', ma
 const WORDS = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
 const UNITS = { s: 's', sec: 's', second: 's', m: 'm', min: 'm', minute: 'm', h: 'h', hr: 'h', hour: 'h', d: 'd', day: 'd', w: 'w', wk: 'w', week: 'w', mo: 'mo', month: 'mo', y: 'y', yr: 'y', year: 'y' };
 
-/** A string as compared: whitespace, quotes and dashes normalized, case folded, final period dropped. */
+/** A string as compared: whitespace, quotes and dashes normalized, case folded, a final ellipsis or period
+ * dropped — an opening quoted as "Last quarter the design system got simpler…" is that text's opening. */
 export const norm = value => String(value ?? '')
   .replace(/[‘’‚]/g, "'").replace(/[“”„]/g, '"').replace(/[–—−]/g, '-')
-  .replace(/\s+/g, ' ').trim().replace(/\.$/, '').toLowerCase();
+  .replace(/\s+/g, ' ').trim().replace(/\s*(…|\.{3})$/, '').replace(/\.$/, '').toLowerCase();
 
 const number = value => {
   if (typeof value === 'number') return value;
@@ -192,7 +195,8 @@ export function same(key, expected, got) {
   if (DATE_FIELDS.has(key)) return date(got) === date(expected);
   if (key === 'text' || key === 'about' || key === 'description') {
     const a = norm(expected), b = norm(got);
-    return a === b || (a.length >= 10 && b.length >= 10 && (b.startsWith(a) || a.startsWith(b)));
+    // An opening identifies the text when it is long enough to be distinctive: some twenty characters, four words.
+    return a === b || (a.length >= 20 && b.length >= 20 && (b.startsWith(a) || a.startsWith(b)));
   }
   return norm(got) === norm(expected);
 }

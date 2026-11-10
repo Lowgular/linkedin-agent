@@ -1,6 +1,6 @@
 [dataset]
 name = "lowgular/browser-use-linkedin"
-version = "0.2.3"
+version = "0.2.6"
 description = "LinkedIn reads in plain language against recorded page snapshots"
 authors = []
 keywords = []

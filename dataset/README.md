@@ -112,14 +112,15 @@ The final message — read from the ATIF `trajectory.json` Harbor writes for eve
 harness — is prose: no format is asked of the agent. The grader reads it into the shape
 of the task's facts and compares, fact by fact.
 
-1. **Extraction.** Claude Haiku is made to call one tool, `answer`, whose input schema is
+1. **Extraction.** Claude Opus is made to call one tool, `answer`, whose input schema is
    derived from `tests/expected.json`: the same keys, every field nullable, each field
    described from `shapes.json`. A tiny prompt: fill it with what the message states,
    null for what it does not say, the members of a list as the message gives them as its answer,
-   in the message's order, leaving out what it mentions only as context. Haiku extracts; it
-   does not judge. Through the API when `ANTHROPIC_API_KEY` is set, else through the Claude
+   in the message's order, leaving out what it mentions only as context, and taking a definite answer
+   over an alternative the message also offers. Opus extracts; it does not judge. The extractor is part
+   of the grade, so it is fixed (Gemini Flash-Lite only when there is no Claude login, `-x gemini`). Through the API when `ANTHROPIC_API_KEY` is set, else through the Claude
    Code CLI in the task image with `CLAUDE_CODE_OAUTH_TOKEN`; each `task.toml` passes both
-   from the host into the container. A call costs well under a cent.
+   from the host into the container. A call costs a few cents at most.
 2. **Comparison**, in code, 1 or 0 per fact: numbers after thousands separators, strings
    after whitespace, quotes, dashes and case, dates with month names spelled or short and
    `Present` as now or current, a post's age in LinkedIn's form or spelled out (`6d`, `6
@@ -166,3 +167,15 @@ per version once that version is stable.
 - 0.2.3 is the same thirteen asks and facts on linuxserver.io's Chromium rather than `dev-browser`: the
   environment declares the world's address map (`BROWSER_MCP_MAP_HOSTS`) and the agent's browser tools,
   uploaded beside the agent folder, answer LinkedIn's address from the world's site; no proxy, no click log.
+- 0.2.4 is the same thirteen asks, graded on what each asks and nothing else: the expected answers lose
+  every field the question does not ask for (links, a post's age, counts where names are asked, an end
+  date where only a start is), and a post the question names is not scored for its identity. The grader:
+  an opening quoted with an ellipsis is that text's opening (at least twenty characters); the extractor
+  is Claude Opus, and it takes an answer's definite claim over an alternative it also offers.
+- 0.2.5 grades as 0.2.4 does, from the recorded trajectory alone: the trajectory is a declared artifact,
+  the grader runs in a container of its own (`environment_mode = "separate"`) with the extractor's keys,
+  which the agent's container no longer gets. Any recorded job can be regraded (`harbor job regrade`)
+  when the grader changes.
+- 0.2.6 asks `activity-best-post` for the post's link, which its expected answer holds again in place
+  of the opening words (0.2.4 had dropped the link, so an answer naming the post by its link failed);
+  the other twelve tasks are 0.2.5's, unchanged.

@@ -1,8 +1,8 @@
 """The eval image's entrypoint: score this agent folder on the lowgular/browser-use-linkedin dataset with Harbor.
 
-    docker compose run --rm eval                          all thirteen tasks, Gemini CLI on Gemini 3.8 Flash
+    docker compose run --rm eval                          all thirteen tasks, Gemini CLI on Gemini 3.5 Flash-Lite
     docker compose run --rm eval -i profile-followers     one task (-i again for more)
-    docker compose run --rm eval -m flash-lite            another model: an alias below or a provider/model id
+    docker compose run --rm eval -m flash                 another model: an alias below or a provider/model id
     docker compose run --rm eval -h claude-code -m haiku  another CLI: claude-code, codex, gemini-cli, opencode
     docker compose run --rm eval -x gemini                the grader's extractor on Gemini instead of Claude Haiku
 
@@ -20,12 +20,15 @@ import subprocess
 import sys
 from pathlib import Path
 
+GEMINI_CLI_VERSION = "0.67.0"  # as agent/Dockerfile installs it
+
 ALIASES = {
     "flash": "gemini/gemini-3.8-flash",
     "flash-lite": "gemini/gemini-3.5-flash-lite",
     "haiku": "claude-haiku-5-5",
     "sonnet": "claude-sonnet-5-5",
     "luna": "gpt-6-luna",
+    "glm-5.3-flash": "opencode-go/glm-5.3-flash",  # OpenCode Go, with OPENCODE_API_KEY
 }
 DATASET = "lowgular/browser-use-linkedin"
 JOBS_VOLUME = os.environ.get("JOBS_VOLUME", "linkedin-agent-jobs")
@@ -93,7 +96,20 @@ def main(argv: list[str]) -> None:
         *(["-m", model] if model else []),
         "--jobs-dir", str(JOBS_DIR), *rest,
     ]
-    print("▸ " + " ".join(command), file=sys.stderr)
+    # Codex on a ChatGPT plan: the login `codex login` saved on this machine (compose mounts it), unless a key is set.
+    codex_login = Path("/root/.codex-host/auth.json")
+    if harness == "codex" and not os.environ.get("OPENAI_API_KEY") and codex_login.is_file():
+        os.environ["CODEX_AUTH_JSON_PATH"] = str(codex_login)
+        print(f"▸ Codex signs in with this machine's login ({codex_login.name}), not an API key", file=sys.stderr)
+    # Gemini CLI at the version the agent image pins (agent/Dockerfile), not Harbor's default of the latest: the eval
+    # scores the CLI the workshop runs.
+    if harness == "gemini-cli":
+        command += ["--ak", f"version={GEMINI_CLI_VERSION}"]
+    # OpenCode Go's provider is not one Harbor passes a key to by itself: its key goes to the agent explicitly.
+    secret = os.environ.get("OPENCODE_API_KEY", "")
+    if harness == "opencode" and secret:
+        command += ["--ae", f"OPENCODE_API_KEY={secret}"]
+    print("▸ " + " ".join(command).replace(secret, "***") if secret else "▸ " + " ".join(command), file=sys.stderr)
     if path:
         code = subprocess.run(command).returncode
     else:

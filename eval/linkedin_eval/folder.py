@@ -10,7 +10,7 @@ settings — so these subclasses add one step: once the CLI is installed, the fo
 tools are the trial's own services (eval/compose.yaml), where the folder's settings find them.
 
     harbor run -d lowgular/browser-use-linkedin@0.2.3 -a linkedin_eval.folder:gemini_cli \
-        --ak agent_dir=/app/agent --extra-docker-compose /app/eval/compose.yaml -m gemini/gemini-3.8-flash
+        --ak agent_dir=/app/agent --extra-docker-compose /app/eval/compose.yaml -m gemini/gemini-3.5-flash-lite
 
 Each class also goes by Harbor's agent name with underscores — linkedin_eval.folder:claude_code —
 and carries the model it runs when -m is not given. Everything else — login, permissions, logs — is
@@ -29,6 +29,12 @@ from harbor.agents.installed.opencode import OpenCode as _OpenCode, OpenCodeOpti
 
 # What never leaves the machine when a folder is uploaded: secrets, and what tools install or keep at run time.
 EXCLUDES = (".obsidian", ".DS_Store", "settings.local.json", ".env", ".env.*", "node_modules", ".git", ".runtime")
+# Codex's own tools, off: what the other CLIs' settings deny them (shell, web, sub-agents) and a browser of its own.
+# Code mode stays: Codex calls every tool through it, the MCP's too, and without a shell it runs only tool calls.
+CODEX_LOCK = "".join(f"--disable {f} " for f in (
+    "shell_tool", "unified_exec", "multi_agent", "browser_use", "browser_use_external",
+    "in_app_browser", "computer_use", "image_generation", "apps", "plugins",
+)) + "-c web_search=disabled "
 WORKDIR = "/app"
 
 
@@ -79,10 +85,16 @@ class Codex(AgentFolder, _Codex):
     options_model = _with_agent_dir(CodexOptions)
     default_model = "gpt-6-luna"
 
+    async def exec_as_agent(self, environment, command, **kwargs):
+        # Harbor starts `codex exec` with the sandbox off and its shell on, and Codex's sandbox cannot start in a
+        # trial container. So, like the other CLIs' settings, the agent gets no shell, no code execution, no
+        # sub-agents, no browser of its own, no web, no writes: the browser MCP is its one tool.
+        return await super().exec_as_agent(environment, command=command.replace("--enable unified_exec ", CODEX_LOCK), **kwargs)
+
 
 class GeminiCli(AgentFolder, _GeminiCli):
     options_model = _with_agent_dir(GeminiCliOptions)
-    default_model = "gemini/gemini-3.8-flash"  # the gemini/ prefix: without a provider Harbor assumes Vertex AI
+    default_model = "gemini/gemini-3.5-flash-lite"  # the gemini/ prefix: without a provider Harbor assumes Vertex AI
 
 
 class Opencode(AgentFolder, _OpenCode):

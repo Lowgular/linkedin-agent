@@ -3,8 +3,7 @@
     "education": [
       {
         "school": {
-          "name": "Summit Software",
-          "link": "https://www.linkedin.com/school/summit-software/"
+          "name": "Summit Software"
         },
         "degree": "Master of Science (M.Sc.), Software Development and Technology: Software Engineering",
         "from": "2010",
@@ -12,8 +11,7 @@
       },
       {
         "school": {
-          "name": "Summit Digital",
-          "link": "https://www.linkedin.com/school/summit-digital/"
+          "name": "Summit Digital"
         },
         "degree": "Bachelor's degree, Software Development and Technology",
         "from": "2003",

@@ -1,20 +1,15 @@
 {
   "answer": {
     "post": {
-      "link": "https://www.linkedin.com/feed/update/urn:li:activity:7516519700353171456/",
-      "reactions": 3,
       "reactors": [
         {
-          "name": "Weronika Sadowska",
-          "link": "https://www.linkedin.com/in/weronika-sadowska-2k7f1/"
+          "name": "Weronika Sadowska"
         },
         {
-          "name": "Inês Ferreira",
-          "link": "https://www.linkedin.com/in/ines-ferreira-5d9x4/"
+          "name": "Inês Ferreira"
         },
         {
-          "name": "Teodor Lis",
-          "link": "https://www.linkedin.com/in/teodor-lis-7w1c9/"
+          "name": "Teodor Lis"
         }
       ]
     }
