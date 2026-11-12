@@ -40,7 +40,7 @@ accessibility tree the live page had; a click the recording holds moves to the r
 click it does not hold does nothing; a page that was never walked is answered "Not recorded". `/in/me/`
 redirects to the signed-in member's profile, as on LinkedIn. The site has no index of what is recorded: every
 path of it is reachable from the agent's browser as LinkedIn, so a list would hand the agent the pages instead of
-letting it find them (`world/` is the list). In compose, http://localhost:3000 shows the browser the agent clicks in.
+letting it find them (`world/` is the list). In compose, http://localhost:3023 shows the browser the agent clicks in.
 
 ## The loop
 

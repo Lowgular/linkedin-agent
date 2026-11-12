@@ -32,24 +32,31 @@ cd linkedin-agent
 cp .env.example .env
 ```
 
-Open `.env` and put your key after `GEMINI_API_KEY=`. Then build everything once:
-
-```sh
-docker compose --profile eval build
-```
-
-This builds three images from this folder, the agent (Gemini CLI), its browser tools (`browser-mcp`) and
-the eval, and pulls the browser, linuxserver.io's Chromium. The world itself is not on your machine: the
+Open `.env` and put your key after `GEMINI_API_KEY=`. Then build and start the assistant with the single command below. It builds the agent and browser tools and downloads Chromium automatically. Build the optional evaluation image later with `docker compose --profile eval build eval`. The world itself is not on your machine: the
 browser fetches its pages from the site it is published at (`world/README.md`), so the agent needs the
 internet, as Gemini does anyway.
+
+## Workshop: start in the background
+
+After setting the key in `.env`, build and start the stack:
+
+```sh
+docker compose up --build -d
+```
+
+Open http://localhost:3023 to watch the browser. When ready, open an interactive Gemini session:
+
+```sh
+docker compose exec agent gemini
+```
 
 ## Talk to the agent
 
 ```sh
-docker compose run --rm agent
+docker compose run --build --rm agent
 ```
 
-The browser and its tools start first, then Gemini CLI opens in `agent/`. Open **http://localhost:3000**
+The browser and its tools start first, then Gemini CLI opens in `agent/`. Open **http://localhost:3023**
 to watch the browser. Ask what a person would ask:
 
 - How many followers does my profile have?
@@ -59,7 +66,7 @@ to watch the browser. Ask what a person would ask:
 The agent reads its wiki, opens the pages, and answers. Your folder is mounted into the container, so when
 you change `agent/AGENTS.md` or a page in `agent/pages/`, the next session reads the change. `/quit` leaves the CLI.
 
-**http://localhost:3000** is the browser's screen, live: the agent's tabs open there and you see every
+**http://localhost:3023** is the browser's screen, live: the agent's tabs open there and you see every
 click. To look around the world yourself, `world/world/` holds every recorded page, one folder per address. `docker compose up -d browser-mcp` starts the browser and the tools without the
 agent. When you are done, `docker compose down` stops everything.
 
@@ -75,7 +82,7 @@ STEEL_API_KEY=<your key>
 # BROWSER_PROFILE=<a profile id>  optional: every session starts from that Steel profile
 ```
 
-`docker compose run --rm agent` then browses through Steel: browser-mcp opens a Steel session on the
+`docker compose run --build --rm agent` then browses through Steel: browser-mcp opens a Steel session on the
 first browser step and writes the session's page in Steel's dashboard to its log (`docker compose logs
 browser-mcp`); every session is listed there as well. The browser is Steel's, the world
 is still the world: compose tells browser-mcp to answer `www.linkedin.com` from the world's site
@@ -137,7 +144,7 @@ leaves your machine.
 ## If something does not work
 
 - **The agent cannot reach the browser.** `docker compose logs browser browser-mcp` shows both starting;
-  ports 3000 and 9333 on your machine must be free.
+  ports 3023 and 19333 on your machine must be free.
 - **Pages say "did not answer" or stay empty.** The browser cannot reach the world's site: check the
   internet connection, and `WORLD_URL` in `.env` if you set it.
 - **The first build fails pulling the browser.** `lscr.io` is not reachable from your network. Tell the

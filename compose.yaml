@@ -2,8 +2,8 @@
 #
 #   cp .env.example .env              then put your Gemini API key in it
 #   docker compose run --rm agent     Gemini CLI in agent/, the browser and its tools started first; ask it about your profile
-#   docker compose up -d browser-mcp  the browser and its tools alone: the MCP at localhost:9333 for a CLI on this
-#                                     machine, the browser's screen at http://localhost:3000
+#   docker compose up -d browser-mcp  the browser and its tools alone: the MCP at localhost:19333 for a CLI on this
+#                                     machine, the browser's screen at http://localhost:3023
 #   docker compose down               stop everything
 #
 # The world is not here: it is a static site (world/, published by world/deploy.sh), and the browser's fake
@@ -17,7 +17,7 @@ name: linkedin-agent
 services:
   browser:
     # The browser: linuxserver.io's Chromium (github.com/linuxserver/docker-chromium), a real, headed Chromium on a
-    # desktop streamed to http://localhost:3000, where you watch the agent click; its CDP on 9222, on the
+    # desktop streamed to http://localhost:3023, where you watch the agent click; its CDP on 9222, on the
     # container's loopback, for browser-mcp, which shares its network (as do the agent and the collector), so the
     # ports of all of them are published here. Nothing of the world in it: browser-mcp maps LinkedIn's address to
     # the world's site in the browser's connection.
@@ -36,8 +36,8 @@ services:
       PGID: "1000"
       CHROME_CLI: --remote-debugging-port=9222 --remote-allow-origins=*
     ports:
-      - "127.0.0.1:3000:3000"   # the browser's desktop: http://localhost:3000
-      - "127.0.0.1:9333:9333"   # browser-mcp: http://localhost:9333/mcp, for a CLI on this machine
+      - "127.0.0.1:3023:3000"   # the browser's desktop: http://localhost:3023
+      - "127.0.0.1:19333:9333"   # host MCP endpoint; container clients still use 9333
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://127.0.0.1:9222/json/version"]
       interval: 2s
@@ -82,12 +82,8 @@ services:
     depends_on:
       browser-mcp:
         condition: service_healthy
-      collector:                # with the trace profile only: started with the agent, so its traces have somewhere to go
-        condition: service_started
-        required: false
     env_file:
-      - path: .env
-        required: false
+      - .env
     environment:
       # Tracing to Google Cloud, on when .env names a project (and COMPOSE_PROFILES=trace starts the collector):
       # the CLI sends its telemetry over OTLP to the collector service, which ships every model request and
@@ -134,8 +130,7 @@ services:
     image: ghcr.io/lowgular/linkedin-eval:0.1.0
     profiles: ["eval"]
     env_file:
-      - path: .env
-        required: false
+      - .env
     environment:
       # A build of dataset/ (dataset/build.sh) runs instead of the Hub's, when there is one; -v runs the Hub's.
       DATASET_DIR: /app/dataset/dist
@@ -159,9 +154,8 @@ configs:
   browser-autostart:
     # The desktop's start script: the image's own runs Chromium once, so a browser whose last window closed —
     # the agent closing its last tab — would stay gone; this one starts it again.
-    content: |
-      #!/bin/bash
-      while true; do wrapped-chromium $${CHROME_CLI}; sleep 1; done
+    file: ./browser-autostart.sh
+
 volumes:
   browser-profile:
     name: linkedin-agent-browser-${BROWSER_PROFILE:-default}
