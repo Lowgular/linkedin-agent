@@ -8,6 +8,9 @@ receivers:
     protocols:
       grpc:
         endpoint: 127.0.0.1:4317
+      # Antigravity CLI exports nothing: the telemetry service reads its traces and sends them here (eval/linkedin_eval/ship.py).
+      http:
+        endpoint: 127.0.0.1:4318
 processors:
   # One conversation, one trace. Gemini CLI starts a new trace for every turn, so a session would land in
   # Cloud Trace as unrelated traces. Every record carries the session's id (resource attribute session.id,
@@ -34,6 +37,33 @@ processors:
           - replace_pattern(attributes["session.trace_id"], "-", "")
           - set(trace_id.string, attributes["session.trace_id"])
           - delete_key(attributes, "session.trace_id")
+  # A trace that reads as the conversation. A turn's root span is named user_prompt and carries the prompt
+  # as gen_ai.input.messages (agent/Dockerfile patches the CLI so that it does): the span takes the prompt
+  # as its name, cut at 100 characters, so the waterfall lists the questions asked. The CLI also stamps its
+  # own product description on every span, which says nothing about the run and is dropped.
+  transform/readable:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        conditions:
+          - name == "user_prompt" and attributes["gen_ai.input.messages"] != nil
+        statements:
+          - 'set(name, Concat(["user: ", attributes["gen_ai.input.messages"]], ""))'
+          - replace_pattern(name, "\\s+", " ")
+          - replace_pattern(name, "^(.{100}).+$$", "$$1…")
+      - context: span
+        conditions:
+          - attributes["gen_ai.agent.name"] == "gemini-cli"
+        statements:
+          - delete_key(attributes, "gen_ai.agent.description")
+  # On startup the CLI asks the model to title the previous session ("Summarize the user's primary intent…"),
+  # an llm_call with no parent that starts before the first prompt, so it would be the trace's first root and
+  # the name the trace is listed under. It is not part of this conversation and is dropped.
+  filter/startup:
+    error_mode: ignore
+    traces:
+      span:
+        - name == "llm_call" and IsMatch(attributes["gen_ai.input.messages"], "^.{0,80}Summarize the user's primary intent")
   batch:
     send_batch_size: 200
     timeout: 2s
@@ -51,7 +81,7 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [transform/session, batch]
+      processors: [transform/session, transform/readable, filter/startup, batch]
       exporters: [googlecloud, debug]
     logs:
       receivers: [otlp]

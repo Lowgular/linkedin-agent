@@ -1,0 +1,19 @@
+{
+  "modelProvider": "gemini",
+  "model": "Gemini 4 Hydrogen (Low)",
+  "trustedWorkspaces": [
+    "/app"
+  ],
+  "permissions": {
+    "allow": [
+      "mcp(browser-mcp/*)",
+      "read_file(/app)"
+    ],
+    "deny": [
+      "command(*)",
+      "write_file(*)",
+      "read_url(*)",
+      "execute_url(*)"
+    ]
+  }
+}

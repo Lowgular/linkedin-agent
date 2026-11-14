@@ -1,6 +1,6 @@
 """A folder as the agent, on Harbor's own CLI harnesses.
 
-Harbor's built-in agents — claude-code, codex, gemini-cli, opencode — install their CLI
+Harbor's built-in agents — antigravity-cli, claude-code, codex, gemini-cli, opencode — install their CLI
 in the task container, resolve its login, hand it the instruction, and write the ATIF
 trajectory and the cost into the trial result. What they cannot do is start from a
 folder: they run the CLI bare in /app. A page-object agent is a folder — its brief
@@ -9,19 +9,21 @@ settings — so these subclasses add one step: once the CLI is installed, the fo
 `agent_dir` names is uploaded to /app, minus its secrets, and the CLI starts inside it. Its
 tools are the trial's own services (eval/compose.yaml), where the folder's settings find them.
 
-    harbor run -d lowgular/browser-use-linkedin@0.2.3 -a linkedin_eval.folder:gemini_cli \
-        --ak agent_dir=/app/agent --extra-docker-compose /app/eval/compose.yaml -m gemini/gemini-3.5-flash-lite
+    harbor run -d lowgular/browser-use-linkedin@0.2.3 -a linkedin_eval.folder:antigravity_cli \
+        --ak agent_dir=/app/agent --extra-docker-compose /app/eval/compose.yaml -m gemini/gemini-4-hydrogen
 
 Each class also goes by Harbor's agent name with underscores — linkedin_eval.folder:claude_code —
 and carries the model it runs when -m is not given. Everything else — login, permissions, logs — is
 Harbor's: `harbor agent schema claude-code`.
 """
+import json
 import shutil
 import tempfile
 from pathlib import Path
 
 from pydantic import Field
 
+from harbor.agents.installed.antigravity_cli import AntigravityCli as _AntigravityCli, AntigravityCliOptions
 from harbor.agents.installed.claude_code import ClaudeCode as _ClaudeCode, ClaudeCodeOptions
 from harbor.agents.installed.codex import Codex as _Codex, CodexOptions
 from harbor.agents.installed.gemini_cli import GeminiCli as _GeminiCli, GeminiCliOptions
@@ -76,6 +78,23 @@ class AgentFolder:
             shutil.rmtree(staged, ignore_errors=True)
 
 
+class AntigravityCli(AgentFolder, _AntigravityCli):
+    options_model = _with_agent_dir(AntigravityCliOptions)
+    default_model = "gemini/gemini-4-hydrogen"  # the slug without its effort, which is --ak reasoning_effort
+
+    def _build_settings_config(self, *args, **kwargs):
+        # Harbor writes the CLI's settings.json itself, in the CLI's home, and starts it with every permission
+        # prompt skipped. The folder's own settings (.agents/settings.json) say which tools the agent may not
+        # use; their permissions go into Harbor's file, so a trial is locked as a session is. The model and the
+        # login stay Harbor's.
+        config = super()._build_settings_config(*args, **kwargs)
+        settings = Path(self.options.agent_dir).expanduser() / ".agents" / "settings.json"
+        if settings.is_file():
+            config["permissions"] = json.loads(settings.read_text()).get("permissions", {})
+        config.pop("allowNonWorkspaceAccess", None)
+        return config
+
+
 class ClaudeCode(AgentFolder, _ClaudeCode):
     options_model = _with_agent_dir(ClaudeCodeOptions)
     default_model = "claude-haiku-5-5"
@@ -102,4 +121,4 @@ class Opencode(AgentFolder, _OpenCode):
 
 
 # By Harbor's agent names, hyphens as underscores, so the runner can say -a linkedin_eval.folder:<name>.
-claude_code, codex, gemini_cli, opencode = ClaudeCode, Codex, GeminiCli, Opencode
+antigravity_cli, claude_code, codex, gemini_cli, opencode = AntigravityCli, ClaudeCode, Codex, GeminiCli, Opencode

@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "browser-mcp": {
+      "url": "http://127.0.0.1:9333/mcp"
+    }
+  }
+}

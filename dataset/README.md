@@ -72,8 +72,8 @@ The eval in this repository's compose runs the build in `dist/` when there is on
 (`-v <version>` asks for a published one):
 
 ```sh
-docker compose run --rm eval -i profile-followers    # this build, once ./build.sh made it
-docker compose run --rm eval -v 0.2.1                # a published version
+docker compose exec eval run -i profile-followers    # this build, once ./build.sh made it
+docker compose exec eval run -v 0.2.1                # a published version
 ```
 
 The build, the check and the publish are bash, for whoever maintains the dataset; nobody needs them

@@ -1,10 +1,16 @@
-"""The eval image's entrypoint: score this agent folder on the lowgular/browser-use-linkedin dataset with Harbor.
+"""`docker compose exec eval run`: score this agent folder on the lowgular/browser-use-linkedin dataset with Harbor.
 
-    docker compose run --rm eval                          all thirteen tasks, Gemini CLI on Gemini 3.5 Flash-Lite
-    docker compose run --rm eval -i profile-followers     one task (-i again for more)
-    docker compose run --rm eval -m flash                 another model: an alias below or a provider/model id
-    docker compose run --rm eval -h claude-code -m haiku  another CLI: claude-code, codex, gemini-cli, opencode
-    docker compose run --rm eval -x gemini                the grader's extractor on Gemini instead of Claude Haiku
+    docker compose exec eval run                          one task (profile-followers), one trial: Antigravity CLI on
+                                                          Gemini 4 Hydrogen, low effort
+    docker compose exec eval run -i activity-best-post    another task, still one
+    docker compose exec eval run -m flash                 another model: an alias below or a provider/model id
+    docker compose exec eval run -h claude-code -m haiku  another CLI: claude-code, codex, opencode, gemini-cli (deprecated)
+    docker compose exec eval run -x gemini                the grader's extractor on Gemini instead of Claude
+
+A run is one task, once: the key is shared, and all thirteen tasks cost about a dollar. The whole dataset, several
+tasks, or more than one trial of a task take --all:
+
+    docker compose exec eval run --all                    all thirteen tasks (with -i, -k, -n as Harbor takes them)
 
 Harbor runs here and starts one container per task on the host's Docker, through its socket. It mounts
 each trial's log folder into that container by path, and the host's Docker resolves that path on its
@@ -13,6 +19,10 @@ volume: the same path means the same folder to both, on macOS, Windows and Linux
 every task reads the agent's answer with an extractor: Claude Haiku by default (ANTHROPIC_API_KEY or
 CLAUDE_CODE_OAUTH_TOKEN in .env), Gemini with -x gemini (GEMINI_API_KEY); with only a Gemini key in .env the
 grader picks Gemini by itself.
+
+A machine spends no more than SPEND_CAP_USD on the eval (default 1.50, one run of all thirteen tasks on Gemini 4
+Hydrogen and a few repeats): the cost of every trial in the jobs volume is added up before a run, and at the
+cap nothing starts. SPEND_CAP_USD=off in .env lifts it.
 """
 import json
 import os
@@ -20,9 +30,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-GEMINI_CLI_VERSION = "0.67.0"  # as agent/Dockerfile installs it
+GEMINI_CLI_VERSION = "0.67.0"  # as agent/Dockerfile.gemini-cli installs it
+DEFAULT_TASK = "profile-followers"  # what runs when no task is named
+ANTIGRAVITY_EFFORT = "low"  # as agent/.agents/settings.json names the model: Gemini 4 Hydrogen (Low)
 
 ALIASES = {
+    "hydrogen": "gemini/gemini-4-hydrogen",
     "flash": "gemini/gemini-3.8-flash",
     "flash-lite": "gemini/gemini-3.5-flash-lite",
     "haiku": "claude-haiku-5-5",
@@ -35,6 +48,7 @@ JOBS_VOLUME = os.environ.get("JOBS_VOLUME", "linkedin-agent-jobs")
 JOBS_DIR = Path(os.environ.get("JOBS_DIR", f"/var/lib/docker/volumes/{JOBS_VOLUME}/_data"))
 AGENT_DIR = os.environ.get("AGENT_DIR", "/app/agent")
 TRIAL_COMPOSE = os.environ.get("TRIAL_COMPOSE", "/app/eval/compose.yaml")
+SPEND_CAP_USD = os.environ.get("SPEND_CAP_USD", "") or "1.50"
 
 
 def fail(message: str) -> None:
@@ -55,11 +69,35 @@ def check_jobs_volume() -> None:
         fail(f"{JOBS_DIR} is not mounted in this container")
 
 
+def check_spend_cap() -> None:
+    """Nothing starts once the trials in the jobs volume have cost SPEND_CAP_USD: one key is shared by a room."""
+    if SPEND_CAP_USD.lower() in ("off", "none", "no"):
+        return
+    try:
+        cap = float(SPEND_CAP_USD)
+    except ValueError:
+        fail(f"SPEND_CAP_USD must be a number of dollars or off, not {SPEND_CAP_USD}")
+    if cap <= 0:
+        return
+    spent = 0.0
+    for result in JOBS_DIR.rglob("result.json"):
+        try:
+            spent += (json.loads(result.read_text()).get("agent_result") or {}).get("cost_usd") or 0
+        except (OSError, ValueError, AttributeError):
+            continue  # a result half written, or not a trial's
+    if spent >= cap:
+        fail(f"this machine has spent ${spent:.2f} on the eval, and the cap is ${cap:.2f} (SPEND_CAP_USD in .env). "
+             "Ask the presenter before raising it.")
+    print(f"▸ ${spent:.2f} of ${cap:.2f} spent on this machine (SPEND_CAP_USD)", file=sys.stderr)
+
+
 def main(argv: list[str]) -> None:
-    harness, model, version, path, extractor, rest = "gemini-cli", "", "", "", "", []
+    harness, model, version, path, extractor, rest, everything = "antigravity-cli", "", "", "", "", [], False
     args = iter(argv)
     for a in args:
-        if a == "-h":
+        if a == "--all":
+            everything = True
+        elif a == "-h":
             harness = next(args, "")
         elif a == "-m":
             model = next(args, "")
@@ -72,12 +110,25 @@ def main(argv: list[str]) -> None:
         else:
             rest.append(a)
     if not harness:
-        fail("usage: eval [-h gemini-cli|claude-code|codex|opencode] [-m model] [-x claude|gemini] [-v dataset version | -p dataset folder] [Harbor options]")
+        fail("usage: run [--all] [-h antigravity-cli|claude-code|codex|opencode|gemini-cli] [-m model] [-x claude|gemini] [-v dataset version | -p dataset folder] [Harbor options]")
     if extractor and extractor not in ("claude", "gemini"):
         fail(f"-x takes claude or gemini, not {extractor}")
     if extractor:
         os.environ["EXTRACTOR"] = extractor  # Harbor hands it to each task, whose grader reads it
+    # One task, once, unless --all: no task named is the default one, and neither several tasks nor several
+    # trials of one start.
+    if not everything:
+        tasks = rest.count("-i") + rest.count("--include-task-name")
+        if tasks > 1:
+            fail("one task a run: several tasks, or the whole dataset, take --all")
+        if not tasks:
+            rest += ["-i", DEFAULT_TASK]
+        for flags in (("-n", "--n-concurrent"), ("-k", "--n-attempts")):
+            for flag in flags:
+                if flag in rest and rest[rest.index(flag) + 1:rest.index(flag) + 2] != ["1"]:
+                    fail(f"one trial a run: {flag} above 1 takes --all")
     check_jobs_volume()
+    check_spend_cap()
     model = ALIASES.get(model, model)
     # A local build of the dataset (dataset/dist, DATASET_DIR), when there is one, wins over the Hub unless -v
     # asks for a published version.
@@ -101,8 +152,10 @@ def main(argv: list[str]) -> None:
     if harness == "codex" and not os.environ.get("OPENAI_API_KEY") and codex_login.is_file():
         os.environ["CODEX_AUTH_JSON_PATH"] = str(codex_login)
         print(f"▸ Codex signs in with this machine's login ({codex_login.name}), not an API key", file=sys.stderr)
-    # Gemini CLI at the version the agent image pins (agent/Dockerfile), not Harbor's default of the latest: the eval
-    # scores the CLI the workshop runs.
+    # Antigravity CLI takes a model's effort apart from its slug; the session's, unless --ak reasoning_effort says another.
+    if harness == "antigravity-cli" and not any(a.startswith("reasoning_effort=") for a in rest):
+        command += ["--ak", f"reasoning_effort={ANTIGRAVITY_EFFORT}"]
+    # Gemini CLI at the version its image pins (agent/Dockerfile.gemini-cli), not Harbor's default of the latest.
     if harness == "gemini-cli":
         command += ["--ak", f"version={GEMINI_CLI_VERSION}"]
     # OpenCode Go's provider is not one Harbor passes a key to by itself: its key goes to the agent explicitly.
@@ -118,11 +171,15 @@ def main(argv: list[str]) -> None:
         code = result.returncode
         if code and ("not found for dataset" in result.stderr or "Dataset" in result.stderr and "not found" in result.stderr):
             fail(f"{dataset[1]} is not on Harbor Hub, or not public: this container has no Hub login. "
-                 "Run a local build instead: docker compose run --rm -v <dataset folder>:/dataset:ro eval -p /dataset")
+                 "Run a local build instead: build dataset/dist (dataset/build.sh), which this container reads")
         sys.stderr.write(result.stderr)
-    print(f"\nResults are in the {JOBS_VOLUME} volume; `docker compose run --rm eval-results` lists them.", file=sys.stderr)
+    print(f"\nResults are in the {JOBS_VOLUME} volume; `docker compose exec eval results` lists them.", file=sys.stderr)
     sys.exit(code)
 
 
-if __name__ == "__main__":
+def cli() -> None:
     main(sys.argv[1:])
+
+
+if __name__ == "__main__":
+    cli()

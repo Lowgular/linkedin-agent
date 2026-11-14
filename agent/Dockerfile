@@ -1,17 +1,22 @@
-# Dockerfile — the agent image: Node and Gemini CLI, nothing else. compose.yaml runs it with this folder mounted
+# Dockerfile — the agent image: Antigravity CLI (agy), nothing else. compose.yaml runs it with this folder mounted
 # at /app, so the CLI starts in the agent folder and reads its brief, wiki and settings from the checkout, where
 # you edit them; its browser tools are their own service (mcp/browser-mcp), at 127.0.0.1:9333 as
-# .gemini/settings.json says. The key comes from .env; the auth method is chosen here once, so the CLI never
-# asks, and /app is trusted, since the CLI disables a folder's MCP servers until its folder is. The CLI's
-# self-update is off: the version is the one pinned here, and a fresh container would otherwise update every run.
-# Published as ghcr.io/lowgular/linkedin-agent for anyone who prefers a pull to a build.
-FROM node:24-slim
+# .agents/mcp_config.json says. The key comes from .env. The CLI keeps its settings in its home, not in the
+# folder, so the entrypoint copies .agents/settings.json there on every start: it chooses the Gemini API key as
+# the login, so the CLI never asks, trusts /app, names the model (by its label, as /model saves it: a slug is
+# ignored) and says which tools the agent may not use. mcp_config.json is copied to the home as well: from the
+# folder alone an interactive session gives the browser tools to a subagent only, not to the agent itself.
+# In an eval trial /app starts empty and Harbor writes the settings itself, so a missing file is not an error.
+# The CLI is the installer's current release, a single binary; its self-update is off, so a container runs the
+# version its image was built with.
+# Gemini CLI, which this image held before, is deprecated: Dockerfile.gemini-cli, the gemini-cli profile in compose.
+FROM debian:stable-slim
 LABEL org.opencontainers.image.source="https://github.com/Lowgular/linkedin-agent" \
-      org.opencontainers.image.description="Gemini CLI for the linkedin-agent folder, mounted at /app"
+      org.opencontainers.image.description="Antigravity CLI for the linkedin-agent folder, mounted at /app"
+ENV AGY_CLI_DISABLE_AUTO_UPDATE=true
 RUN apt-get update && apt-get install -y --no-install-recommends git curl ca-certificates && rm -rf /var/lib/apt/lists/* \
- && npm install -g @google/gemini-cli@0.67.0 \
- && mkdir -p /root/.gemini \
- && echo '{"security":{"auth":{"selectedType":"gemini-api-key"},"folderTrust":{"enabled":false}},"general":{"disableAutoUpdate":true,"disableUpdateNag":true}}' > /root/.gemini/settings.json \
- && echo '{"/app":"TRUST_FOLDER"}' > /root/.gemini/trustedFolders.json
+ && curl -fsSL https://antigravity.google/cli/install.sh | bash -s -- --dir /usr/local/bin \
+ && agy --version
 WORKDIR /app
-CMD ["gemini"]
+ENTRYPOINT ["sh", "-c", "mkdir -p /root/.gemini/antigravity-cli /root/.gemini/config; cp .agents/settings.json /root/.gemini/antigravity-cli/ 2>/dev/null; cp .agents/mcp_config.json /root/.gemini/config/ 2>/dev/null; exec \"$@\"", "--"]
+CMD ["agy"]

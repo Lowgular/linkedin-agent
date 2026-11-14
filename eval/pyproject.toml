@@ -9,5 +9,11 @@ description = "Harbor harnesses that run the linkedin-agent folder, and the runn
 requires-python = ">=3.12"
 dependencies = ["harbor==0.25.0"]
 
+[project.scripts]
+run = "linkedin_eval.run:cli"
+results = "linkedin_eval.results:main"
+trace = "linkedin_eval.trace:main"
+ship = "linkedin_eval.ship:main"
+
 [tool.setuptools]
 packages = ["linkedin_eval"]

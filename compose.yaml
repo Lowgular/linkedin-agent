@@ -1,16 +1,18 @@
 # compose.yaml — the agent and its browser, for any machine with Docker: nothing installed on the host.
 #
 #   cp .env.example .env              then put your Gemini API key in it
-#   docker compose run --rm agent     Gemini CLI in agent/, the browser and its tools started first; ask it about your profile
-#   docker compose up -d browser-mcp  the browser and its tools alone: the MCP at localhost:19333 for a CLI on this
-#                                     machine, the browser's screen at http://localhost:3023
-#   docker compose down               stop everything
+#   docker compose up -d                    everything: the browser (its screen at http://localhost:3023), its tools,
+#                                           the agent, the eval, the telemetry
+#   docker compose exec agent agy           Antigravity CLI in agent/; ask it about your profile
+#   docker compose exec eval run            score the agent on one task of the dataset
+#   docker compose exec telemetry trace     the latest traces; with an id, one of them step by step
+#   docker compose down                     stop everything
 #
 # The world is not here: it is a static site (world/, published by world/deploy.sh), and the browser's fake
 # proxies LinkedIn's names to it. The browser tools (mcp/browser-mcp) and the agent share the browser's network:
-# browser-mcp serves 127.0.0.1:9333, as agent/.gemini/settings.json says, attached to the browser's CDP on
+# browser-mcp serves 127.0.0.1:9333, as agent/.agents/mcp_config.json says, attached to the browser's CDP on
 # 127.0.0.1:9222, and restarts on every edit to mcp/browser-mcp. Sessions and the CLI's own state persist in the
-# gemini-home volume; the folder itself is
+# agy-home volume; the folder itself is
 # yours, bind-mounted, so what you change in the brief or the wiki is what the next run reads.
 # The project's name is fixed, so the volumes keep their names whatever the clone's folder is called.
 name: linkedin-agent
@@ -76,8 +78,36 @@ services:
       timeout: 3s
       retries: 30
   agent:
+    # Antigravity CLI (agy), logged in with GEMINI_API_KEY from .env; its settings are agent/.agents/settings.json,
+    # which the image's entrypoint copies into the CLI's home on every start. The container's own process is the
+    # CLI, waiting on its terminal: `docker compose attach agent` is that session, and when /quit ends it the
+    # container starts again with a new one.
+    restart: unless-stopped
     build: ./agent
+    image: ghcr.io/lowgular/linkedin-agent:0.2.0
+    network_mode: "service:browser"
+    depends_on:
+      browser-mcp:
+        condition: service_healthy
+    environment:
+      # The CLI's login, and the only key of .env the agent gets: settings.json says modelProvider gemini, which
+      # reads the key from this variable and nowhere else.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    volumes:
+      - ./agent:/app
+      - agy-home:/root/.gemini
+    working_dir: /app
+    stdin_open: true
+    tty: true
+  agent-gemini-cli:
+    # DEPRECATED, only with the `gemini-cli` profile: the agent on Gemini CLI, which Google retired for individual
+    # accounts; it still runs on a paid API key. Kept for its telemetry, which Antigravity CLI does not export:
+    # docker compose --profile gemini-cli run --rm agent-gemini-cli
+    build:
+      context: ./agent
+      dockerfile: Dockerfile.gemini-cli
     image: ghcr.io/lowgular/linkedin-agent:0.1.0
+    profiles: ["gemini-cli"]
     network_mode: "service:browser"
     depends_on:
       browser-mcp:
@@ -104,7 +134,8 @@ services:
     stdin_open: true
     tty: true
   collector:
-    # Only with the `trace` profile (COMPOSE_PROFILES=trace in .env): ships the agent's telemetry to the
+    # Only with the `trace` profile (COMPOSE_PROFILES=trace in .env): ships the telemetry of agent-gemini-cli (the
+    # deprecated Gemini CLI; Antigravity CLI exports none) to the
     # project GOOGLE_CLOUD_PROJECT names, with the Application Default Credentials from gcloud's folder on
     # this machine (`gcloud auth application-default login`), mounted read-only.
     image: otel/opentelemetry-collector-contrib:0.140.0
@@ -121,20 +152,20 @@ services:
       - ./telemetry/collector.yaml:/etc/otelcol/collector.yaml:ro
       - ${GCLOUD_CONFIG_DIR:-$HOME/.config/gcloud}:/gcloud:ro
   eval:
-    # The agent scored on lowgular/browser-use-linkedin by Harbor: `docker compose run --rm eval -i profile-followers`
-    # (eval/linkedin_eval/run.py says the options). Harbor starts each task's container on this machine's
-    # Docker, through the socket; the jobs volume is mounted where Docker itself keeps it, so the trials'
+    # The agent scored on lowgular/browser-use-linkedin by Harbor. The container stays up and its commands are
+    # exec'd: `docker compose exec eval run` scores one task (eval/linkedin_eval/run.py says the options),
+    # `docker compose exec eval results` lists the latest runs. Harbor starts each task's container on this
+    # machine's Docker, through the socket; the jobs volume is mounted where Docker itself keeps it, so the trials'
     # log folders resolve to the same place for Harbor here and for Docker. Keys come from .env: GEMINI_API_KEY
     # for the agent, ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN for the grader's extractor.
     build: ./eval
-    image: ghcr.io/lowgular/linkedin-eval:0.1.0
-    profiles: ["eval"]
+    image: ghcr.io/lowgular/linkedin-eval:0.2.0
     env_file:
       - .env
     environment:
       # A build of dataset/ (dataset/build.sh) runs instead of the Hub's, when there is one; -v runs the Hub's.
       DATASET_DIR: /app/dataset/dist
-      AGENT_DIR: ${AGENT_DIR:-/app/agent}   # another agent folder: AGENT_DIR=/app/agent-plain docker compose run --rm eval …
+      AGENT_DIR: ${AGENT_DIR:-/app/agent}   # another agent folder: AGENT_DIR=/app/agent-plain in .env
     volumes:
       - .:/app:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -143,13 +174,24 @@ services:
       # Codex's own login, for `-h codex` on a ChatGPT plan instead of an API key: the folder `codex login` keeps,
       # read-only; run.py hands its auth.json to Harbor, which copies it into each trial.
       - ${CODEX_HOME:-~/.codex}:/root/.codex-host:ro
-  eval-results:
-    # The latest runs and their scores: `docker compose run --rm eval-results` (a number for more than three).
-    image: ghcr.io/lowgular/linkedin-eval:0.1.0
-    profiles: ["eval"]
-    entrypoint: ["python", "-m", "linkedin_eval.results"]
+  telemetry:
+    # What the agent did: `docker compose exec telemetry trace` lists the latest traces, a question each, asked in a
+    # session with the agent or by the eval, and with a trace's id prints it as a timeline (eval/linkedin_eval/trace.py). Antigravity CLI exports no telemetry, so the
+    # trace is read from what a run leaves: the trials in the jobs volume, the CLI's transcripts in its home.
+    # The eval's image, with nothing of its own but the two volumes, read-only. Its own process sends every new
+    # trace to the collector, on the browser's network, and so to Cloud Trace, when .env names a project and
+    # COMPOSE_PROFILES=trace starts the collector (eval/linkedin_eval/ship.py); without one it only waits.
+    build: ./eval
+    image: ghcr.io/lowgular/linkedin-eval:0.2.0
+    network_mode: "service:browser"
+    depends_on:
+      - browser
+    command: ["ship"]
+    environment:
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
     volumes:
       - jobs:/var/lib/docker/volumes/linkedin-agent-jobs/_data:ro
+      - agy-home:/agy:ro
 configs:
   browser-autostart:
     # The desktop's start script: the image's own runs Chromium once, so a browser whose last window closed —
@@ -159,6 +201,7 @@ configs:
 volumes:
   browser-profile:
     name: linkedin-agent-browser-${BROWSER_PROFILE:-default}
+  agy-home:
   gemini-home:
   jobs:
     name: linkedin-agent-jobs
