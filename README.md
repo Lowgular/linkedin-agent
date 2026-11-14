@@ -21,7 +21,8 @@ GEMINI_API_KEY=
 Now download all the servers
 
 ```sh
-docker compose up --build -d
+docker compose pull
+docker compose up -d
 ```
 
 ## Browser

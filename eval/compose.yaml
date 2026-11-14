@@ -40,7 +40,8 @@ services:
       retries: 30
   main:
     build:
-      context: /app/agent
+      context: /app/eval
+      dockerfile: trial.Dockerfile
     network_mode: "service:browser"
     depends_on:
       browser-mcp:
